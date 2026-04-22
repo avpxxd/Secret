@@ -8,7 +8,7 @@
     socketHandlers: [],
     liveHandlers: [],
     authReady: null,
-    planeBags: {}
+    recentPlaneIds: {}
   };
 
   function hasConfig() {
@@ -431,34 +431,38 @@
     function getHistoryKey() {
       return "firebase_selected_planes_" + pool;
     }
-    function shuffle(values) {
-      for (var i = values.length - 1; i > 0; i--) {
-        var j = Math.floor(Math.random() * (i + 1));
-        var temp = values[i];
-        values[i] = values[j];
-        values[j] = temp;
-      }
-      return values;
-    }
-    function readBag() {
-      var bag = state.planeBags[pool];
-      if (bag) {
-        return bag.slice();
+    function readRecent() {
+      var recent = state.recentPlaneIds[pool];
+      if (recent) {
+        return recent.slice();
       }
       try {
-        bag = JSON.parse(window.localStorage.getItem(getHistoryKey()) || "[]");
-      } catch (error) {}
-      if (!Array.isArray(bag)) {
-        bag = [];
+        recent = JSON.parse(window.localStorage.getItem(getHistoryKey()) || "[]");
+      } catch (error) {
+        recent = [];
       }
-      state.planeBags[pool] = bag;
-      return bag.slice();
+      if (!Array.isArray(recent)) {
+        recent = [];
+      }
+      state.recentPlaneIds[pool] = recent;
+      return recent.slice();
     }
-    function writeBag(bag) {
-      state.planeBags[pool] = bag.slice();
+    function writeRecent(recent) {
+      state.recentPlaneIds[pool] = recent.slice(-8);
       try {
-        window.localStorage.setItem(getHistoryKey(), JSON.stringify(state.planeBags[pool]));
+        window.localStorage.setItem(getHistoryKey(), JSON.stringify(state.recentPlaneIds[pool]));
       } catch (error) {}
+    }
+    function randomIndex(length) {
+      if (length <= 1) {
+        return 0;
+      }
+      if (window.crypto && window.crypto.getRandomValues) {
+        var array = new Uint32Array(1);
+        window.crypto.getRandomValues(array);
+        return array[0] % length;
+      }
+      return Math.floor(Math.random() * length);
     }
     function choosePlaneFromValue(value) {
       value = value || {};
@@ -468,14 +472,16 @@
       if (!keys.length) {
         return null;
       }
-      var bag = readBag().filter(function(key) {
-        return keys.indexOf(key) !== -1;
+      var recent = readRecent();
+      var filteredKeys = keys.filter(function(key) {
+        return recent.indexOf(key) === -1;
       });
-      if (!bag.length) {
-        bag = shuffle(keys.slice());
+      if (filteredKeys.length) {
+        keys = filteredKeys;
       }
-      var selectedKey = bag.pop();
-      writeBag(bag);
+      var selectedKey = keys[randomIndex(keys.length)];
+      recent.push(selectedKey);
+      writeRecent(recent);
       return value[selectedKey];
     }
     return ensureReady().then(function() {
