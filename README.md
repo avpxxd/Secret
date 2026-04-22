@@ -48,6 +48,20 @@ npm run dev          # http://localhost:3000
 
 Then open **http://localhost:3000** in a modern browser with WebGL support.
 
+### Step 3 — start the backend
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+This starts:
+- the API on **http://localhost:3001**
+- the local Socket.IO relay ports on **7100–7103** and **7150–7153**
+
+When the page is opened from `localhost`, the client automatically uses the local backend instead of the legacy socketnetwork endpoints.
+
 ### Alternative: Python (no install)
 
 ```bash

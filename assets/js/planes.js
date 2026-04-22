@@ -1704,18 +1704,18 @@ Class(function Utils() {
     }
     ;
     this.hitTestObject = function(obj1, obj2) {
-        var x1 = obj1.x
-          , y1 = obj1.y
-          , w = obj1.width
-          , h = obj1.height;
-        var xp1 = obj2.x
-          , yp1 = obj2.y
-          , wp = obj2.width
-          , hp = obj2.height;
-        var x2 = x1 + w
-          , y2 = y1 + h
-          , xp2 = xp1 + wp
-          , yp2 = yp1 + hp;
+                var x1 = obj1.x
+                    , y1 = obj1.y
+                    , w = obj1.width
+                    , h = obj1.height;
+                var xp1 = obj2.x
+                    , yp1 = obj2.y
+                    , wp = obj2.width
+                    , hp = obj2.height;
+                var x2 = x1 + w
+                    , y2 = y1 + h
+                    , xp2 = xp1 + wp
+                    , yp2 = yp1 + hp;
         if (xp1 >= x1 && xp1 <= x2) {
             if (yp1 >= y1 && yp1 <= y2) {
                 return true
@@ -1842,14 +1842,10 @@ Class(function Utils() {
                     return true
                 }
             }
-            return false
         } else {
-            return this.indexOf(str) != -1
+            return this.indexOf(str) > -1
         }
-    }
-    ;
-    String.prototype.clip = function(num, end) {
-        return this.length > num ? this.slice(0, num) + end : this
+        return false
     }
     ;
     String.prototype.capitalize = function() {
@@ -26765,7 +26761,7 @@ Data.Class(function Socket() {
     }
     )();
     function getActiveServers() {
-        var url = "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json";
+        var url = activeServersURL();
         XHR.get(url, function(data) {
             console.log(data)
         })
@@ -26887,10 +26883,22 @@ Data.Class(function Socket() {
         })
     }
 });
+function isLocalSocketHost() {
+    return location.hostname == "localhost" || location.hostname == "127.0.0.1" || location.hostname == "[::1]"
+}
+function socketProtocol() {
+    return isLocalSocketHost() ? "http://" : "https://"
+}
+function socketServerHost() {
+    return isLocalSocketHost() ? location.hostname || "localhost" : "funnel.socketnetwork.io"
+}
+function activeServersURL() {
+    return isLocalSocketHost() ? socketProtocol() + socketServerHost() + ":3001/active_servers.json?" + Utils.timestamp() : "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json?" + Utils.timestamp()
+}
 Module(function SocketConfig() {
     this.exports = {
         io: {
-            host: "funnel.socketnetwork.io",
+            host: socketServerHost(),
             directPortStart: 7150,
             funnelPortStart: 7100,
             totalPorts: 4
@@ -26921,7 +26929,7 @@ Class(function SocketPipeIO(_type, _exp) {
         var max = port + _config.totalPorts;
         for (var i = port; i < max; i++) {
             (function(i) {
-                var connection = io.connect("https://" + _config.host + ":" + i, {
+                var connection = io.connect(socketProtocol() + _config.host + ":" + i, {
                     transports: ["websocket"]
                 });
                 connection.on("r", receiveData);
@@ -26960,7 +26968,7 @@ Class(function SocketPipeIO(_type, _exp) {
     }
     function initSideConnection() {
         var i = "side;";
-        var connection = io.connect("https://" + _config.host + ":" + _config.directPortStart, {
+        var connection = io.connect(socketProtocol() + _config.host + ":" + _config.directPortStart, {
             transports: ["websocket"]
         });
         connection.on("sideMsg", sideMsg);
@@ -27021,7 +27029,7 @@ Class(function SocketPipeReceiver(_type, _exp) {
     }
     )();
     function connect(obj) {
-        _io = io.connect("https://" + obj.host + ":" + obj.port, {
+        _io = io.connect(socketProtocol() + obj.host + ":" + obj.port, {
             transports: ["websocket"]
         });
         _io.on("r", receiveData);
@@ -27073,7 +27081,7 @@ Class(function SocketPipeSelector() {
     (function() {}
     )();
     function getActiveServers(callback) {
-        var url = "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json?" + Utils.timestamp();
+        var url = activeServersURL();
         XHR.get(url, function(data) {
             _active = data;
             setServer();
@@ -27172,7 +27180,7 @@ Class(function SocketPipeSender(_type, _exp, _atIO) {
     }
     )();
     function connect(obj) {
-        _io = io.connect("https://" + obj.host + ":" + obj.port, {
+        _io = io.connect(socketProtocol() + obj.host + ":" + obj.port, {
             transports: ["websocket"]
         });
         _io.on("r", receiveData);
