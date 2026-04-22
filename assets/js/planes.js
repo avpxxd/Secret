@@ -28903,7 +28903,7 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat = _this.delayedCall(showStat, 16500);
+        _timeoutStat = _this.delayedCall(showStat, 12000);
         _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 11000)
     }
     function addHandlers() {
