@@ -1,1 +1,1 @@
-{"country":"us","region":"ca","city":"los angeles","address":"Los Angeles, CA","ip":"172.116.160.131","country_name":"United States","coords":[34.052234,-118.243685]}
+{"country":"","region":"","city":"","address":"Planet Earth","ip":"","country_name":"","coords":[0,0]}

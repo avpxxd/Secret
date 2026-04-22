@@ -27481,18 +27481,8 @@ Data.Class(function User() {
             coords: [0, 0],
             ip: ""
         });
-        function isLegacyLosAngelesGeo(data) {
-            data = normalizeGeo(data);
-            return data.city.toLowerCase() == "los angeles" && data.region == "ca" && (data.country == "us" || data.country == "")
-        }
-        function seedFallbackGeo() {
-            var stored = Storage.get("accurate_geo");
-            if (stored && !isLegacyLosAngelesGeo(stored)) {
-                return normalizeGeo(stored)
-            }
-            return clearGeo
-        }
-        _data = seedFallbackGeo();
+        _data = clearGeo;
+        Storage.set("accurate_geo", null);
         var applyGeo = function(data) {
             data = normalizeGeo(data);
             if (!data || (!data.country && !data.city)) {
@@ -27502,46 +27492,20 @@ Data.Class(function User() {
             checkEmpty();
             Storage.set("accurate_geo", _data)
         };
-        var loadIpGeo = function() {
-            XHR.get("https://ipapi.co/json/", function(data) {
-                try {
-                    if (typeof data == "string") {
-                        data = JSON.parse(data)
-                    }
-                    if (!data || data.error) {
-                        throw new Error("IP lookup failed")
-                    }
-                    applyGeo({
-                        region: data.region_code || data.region || "",
-                        city: data.city || "",
-                        country: data.country_code || data.country || "",
-                        country_name: data.country_name || data.country || "",
-                        coords: [data.latitude || 0, data.longitude || 0],
-                        ip: data.ip || ""
-                    })
-                } catch (e) {
-                    _data = seedFallbackGeo();
-                    checkEmpty();
-                    Storage.set("accurate_geo", _data)
-                }
-            }).onError = function() {
-                _data = seedFallbackGeo();
-                checkEmpty();
-                Storage.set("accurate_geo", _data)
-            }
-        };
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
                 reverseGeocode(position.coords.latitude, position.coords.longitude)
             }, function() {
-                loadIpGeo()
+                checkEmpty();
+                Storage.set("accurate_geo", _data)
             }, {
                 enableHighAccuracy: true,
                 timeout: 10000,
                 maximumAge: 0
             })
         } else {
-            loadIpGeo()
+            checkEmpty();
+            Storage.set("accurate_geo", _data)
         }
     }
     function setIOData() {
