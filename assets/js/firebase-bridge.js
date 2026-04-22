@@ -38,6 +38,7 @@
       state.authReady = Promise.resolve(true);
     }
     state.initialized = true;
+    window.FirebasePlanesBridgeReady = true;
     return true;
   }
 
@@ -208,7 +209,16 @@
 
   function connectSocket(options) {
     if (!init()) {
-      return null;
+      if (options && typeof options.onReady == "function") {
+        setTimeout(function() {
+          options.onReady();
+        }, 0);
+      }
+      return {
+        send: function() {},
+        emitToSide: function() {},
+        disconnect: function() {}
+      };
     }
     ensureReady();
 

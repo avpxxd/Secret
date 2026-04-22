@@ -3271,7 +3271,6 @@ Class(function Mobile() {
                     return
                 }
             }
-            console.log("touchstart??");
             e.preventDefault();
             return e.preventDefault();
             var prevent = true;
@@ -27013,7 +27012,7 @@ function activeServersURL() {
     return isLocalSocketHost() ? socketProtocol() + socketServerHost() + ":3001/active_servers.json?" + Utils.timestamp() : "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json?" + Utils.timestamp()
 }
 function usesFirebaseBackend() {
-    return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FirebasePlanesBridge && window.FirebasePlanesBridge.isAvailable && window.FirebasePlanesBridge.isAvailable() && !isLocalSocketHost())
+    return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FirebasePlanesBridge && !isLocalSocketHost())
 }
 Module(function SocketConfig() {
     this.exports = {
