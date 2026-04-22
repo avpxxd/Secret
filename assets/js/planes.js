@@ -28869,6 +28869,7 @@ Class(function Stats() {
     var _this = this;
     var $this;
     var _movement, _text, _ping, _realTimeLocation;
+    var _isRealTimeShowing = false;
     var _timeoutSet, _timeoutStat, _timeoutStat2;
     var _stats = [];
     var _realTimeQueue = [];
@@ -28892,8 +28893,10 @@ Class(function Stats() {
     }
     function showStat() {
         if (_realTimeQueue.length === 0) {
+            _isRealTimeShowing = false;
             return
         }
+        _isRealTimeShowing = true;
         var stat = _realTimeQueue.shift();
         _realTimeLocation = null;
         var position = _movement.zoomToLocation(stat, true);
@@ -28912,6 +28915,7 @@ Class(function Stats() {
         _text.animateOut();
         _realTimeQueue = [];
         _realTimeLocation = null;
+        _isRealTimeShowing = false;
         if (_timeoutStat) {
             clearTimeout(_timeoutStat)
         }
@@ -28920,13 +28924,9 @@ Class(function Stats() {
         }
     }
     function addRealtimeLocation(location) {
-        _realTimeLocation = location;
-        _realTimeQueue.unshift(location);
-        if (_timeoutStat) {
-            clearTimeout(_timeoutStat)
-        }
-        if (_timeoutStat2) {
-            clearTimeout(_timeoutStat2)
+        _realTimeQueue.push(location);
+        if (_isRealTimeShowing) {
+            return
         }
         showStat()
     }
