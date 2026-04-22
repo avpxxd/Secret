@@ -11277,10 +11277,10 @@ Class(function Copy() {
     });
     this.INTRO = "Throw and catch<br />paper planes with people<br />around the world";
     this.INTRO_DESKTOP = "Use your phone to throw and catch<br />paper planes with people around the world";
-    this.BLOCK_SUB = "This is a mobile companion experience<br/>Join in at <strong>paperplanes.world</strong>";
-    this.DESKTOP_SUB = "Join on your phone at<br/> <strong>paperplanes.world</strong>";
-    this.AFTER = "This experience was<br />created for Google I/O";
-    this.AFTER_DESKTOP = "This experience was<br />created for Google I/O";
+    this.BLOCK_SUB = "This is a mobile companion experience<br/>Join in at <strong>planes.damvan.ca</strong>";
+    this.DESKTOP_SUB = "Join on your phone at<br/> <strong>planes.damvan.ca</strong>";
+    this.AFTER = "Thanks for flying with us!";
+    this.AFTER_DESKTOP = "Thanks for flying with us!<br />We hope you enjoyed the experience.";
     this.AFTER_DESKTOP_SUB = "But don't worry, we're working hard<br />to bring this to everyone soon";
     this.BEGIN = "Touch to begin";
     this.SWIPE = "See your planes";
@@ -11290,7 +11290,7 @@ Class(function Copy() {
     this.STAMP = "Tap to choose your location stamp";
     this.START_FOLD = "Drag the corner to continue";
     this.KEEP_FOLD = "Keep folding, you’re almost there";
-    this.ROTATE = "Ready for takeoff<br />Rotate horizontally";
+    this.ROTATE = "Ready for takeoff!<br />Rotate horizontally";
     this.SCALE = "Drag the corners to customize your plane’s size";
     this.THROW = "Hold your phone like a paper plane and throw*";
     this.THROW_SUB = "*Don’t let go of your phone";
@@ -11299,8 +11299,8 @@ Class(function Copy() {
     this.CONFIRM_TEXT = "Your plane is now<br />flying around the world<br />with ## others";
     this.CONFIRM_TEXT_BACK = "The plane is back<br />flying around the world<br />with ## others";
     this.MADE = "You’ve made<br />## planes";
-    this.SIDESCREEN = "Join on<br />your phone at<br />paperplanes.world";
-    this.INFO_TEXT = ["This experience allows people to throw and catch virtual paper planes with one another<br/><br/>Visit paperplanes.world on your computer to throw planes<br/>into your screen", 'Made by some friends at <a href="http://google.com" target="_blank">Google</a>, <a href=http://activetheory.net target=_blank>Active Theory</a> and <a href=http://droga5.com target=_blank>Droga5</a>'];
+    this.SIDESCREEN = "Join on<br />your phone at<br /><strong>planes.damvan.ca</strong>";
+    this.INFO_TEXT = ["This experience allows people to throw and catch virtual paper planes with one another<br/><br/>Visit <strong>planes.damvan.ca</strong> on your computer to throw planes<br/>into your screen", 'Made by some friends at <a href="http://google.com" target="_blank">Google</a>, <a href=http://activetheory.net target=_blank>Active Theory</a> and <a href=http://droga5.com target=_blank>Droga5</a>'];
     this.INFO_GPS_1 = "Currently using IP for location.";
     this.INFO_GPS_2 = "Enable GPS for more accuracy.";
     this.THROWN_TEXT = ["Planes have just left", "Planes were just thrown from", "Planes are on their way from", "Planes just took off from", "Planes have just departed", ];
@@ -28681,7 +28681,7 @@ Class(function ThrownPlane() {
         if (Tests.AT_IO()) {
             return
         }
-        if (e.location.length > 20) {
+        if (!e.location && !e.address && !e.city) {
             return
         }
         if (_this.realTimeTimeout) {
@@ -28694,13 +28694,18 @@ Class(function ThrownPlane() {
         var b = e.coords;
         var distance = getDistanceFromLatLonInMiles(a[0], a[1], b[0], b[1]);
         if (distance < 100) {
+            var locationText = e.location || e.address || e.city || "Planet Earth";
             _this.realTimeTimeout = true;
             _this.delayedCall(function() {
                 _this.realTimeTimeout = false
             }, 1000 * 60 * 5);
             console.log("realtime added:", e.location);
             _this.events.fire(PlanesEvents.ADD_REALTIME, {
-                location: e.location,
+                location: locationText,
+                address: e.address || e.location || e.city || "Planet Earth",
+                city: e.city || e.address || e.location || "Planet Earth",
+                country: e.country || "",
+                country_name: e.country_name || e.country || "",
                 coords: {
                     lat: e.coords[0],
                     lng: e.coords[1]
@@ -32396,9 +32401,15 @@ Class(function StatsText() {
         })
     }
     this.animateIn = function(stat) {
+        var locationText = stat.location || stat.address || stat.city || "Planet Earth";
+        if (!stat.location && stat.country_name) {
+            locationText += ", " + stat.country_name
+        } else if (!stat.location && stat.country) {
+            locationText += ", " + stat.country
+        }
         $text1.html(Copy.THROWN_TEXT[Utils.doRandom(0, Copy.THROWN_TEXT.length - 1)]).clearTransform().clearAlpha();
-        $text2.html(stat.location).clearTransform().clearAlpha();
-        $text2.fontSize = Utils.convertRange(stat.location.length, 5, 40, 90, 44);
+        $text2.html(locationText).clearTransform().clearAlpha();
+        $text2.fontSize = Utils.convertRange(locationText.length, 5, 40, 90, 44);
         $text2.css({
             fontSize: $text2.fontSize
         });
@@ -36663,19 +36674,28 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
                 _this.onComplete()
             }
         });
+        var stampLocation = Data.User.getLocation();
         var coords = PlaneStampTexture.DATA.coords;
         var color = PlaneStampTexture.DATA.color;
         var scale = {
             x: _plane.mesh.scale.x,
             z: _plane.mesh.scale.z
         };
-        var location = PlaneStampTexture.DATA.address + ", " + (PlaneStampTexture.DATA.country_name || PlaneStampTexture.DATA.country);
+        var address = stampLocation.address || PlaneStampTexture.DATA.address || PlaneStampTexture.DATA.city || "Planet Earth";
+        var city = stampLocation.city || address;
+        var country = stampLocation.country || PlaneStampTexture.DATA.country || "";
+        var countryName = stampLocation.country_name || PlaneStampTexture.DATA.country_name || country;
+        var location = address + (countryName ? ", " + countryName : "");
         Data.Planes.throwPlane({
             id: Utils.timestamp(),
             coords: coords,
             color: color,
             scale: scale,
-            location: location
+            location: location,
+            address: address,
+            city: city,
+            country: country,
+            country_name: countryName
         }, _isRethrow);
         AudioController.trigger("throw")
     }
