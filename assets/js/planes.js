@@ -27481,7 +27481,24 @@ Data.Class(function User() {
             coords: [0, 0],
             ip: ""
         });
-        _data = normalizeGeo(Storage.get("accurate_geo") || clearGeo);
+        function seedFallbackGeo() {
+            var stored = Storage.get("accurate_geo");
+            if (stored) {
+                return normalizeGeo(stored)
+            }
+            var seed = clearGeo;
+            try {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "assets/data/_geo.json", false);
+                xhr.send(null);
+                if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
+                    seed = normalizeGeo(JSON.parse(xhr.responseText));
+                    Storage.set("accurate_geo", seed)
+                }
+            } catch (e) {}
+            return seed
+        }
+        _data = seedFallbackGeo();
         var applyGeo = function(data) {
             data = normalizeGeo(data);
             if (!data || (!data.country && !data.city)) {
@@ -27512,14 +27529,18 @@ Data.Class(function User() {
                     XHR.get("assets/data/_geo.json", function(fallbackData) {
                         applyGeo(fallbackData)
                     }).onError = function() {
-                        _this.data(clearGeo)
+                        _data = seedFallbackGeo();
+                        checkEmpty();
+                        Storage.set("accurate_geo", _data)
                     }
                 }
             }).onError = function() {
                 XHR.get("assets/data/_geo.json", function(fallbackData) {
                     applyGeo(fallbackData)
                 }).onError = function() {
-                    _this.data(clearGeo)
+                    _data = seedFallbackGeo();
+                    checkEmpty();
+                    Storage.set("accurate_geo", _data)
                 }
             }
         };
