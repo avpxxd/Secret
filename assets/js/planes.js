@@ -28584,6 +28584,7 @@ Class(function ThrownPlane() {
     var _this = this;
     var _ping;
     var _debug, _planeFromIO;
+    var _livePlane;
     this.group = new THREE.Group();
     var _colors = Config.STAMPS_COLORS;
     var _throttle = 0;
@@ -28651,12 +28652,17 @@ Class(function ThrownPlane() {
         _this.delayedCall(firePlane, Utils.doRandom(5000, 10000) * 1.4)
     }
     function listenToPlanes() {
-        Data.Socket.on("message", newPlane)
+        _livePlane = function(e) {
+            newPlane(e, true)
+        }
+        Data.Socket.on("message", _livePlane)
     }
     function stopListeningToPlanes() {
-        Data.Socket.off("message", newPlane)
+        if (_livePlane) {
+            Data.Socket.off("message", _livePlane)
+        }
     }
-    function newPlane(e) {
+    function newPlane(e, isLive) {
         PlaneFlocking.instance().addPlane();
         var createPlane = function() {
             var plane = _this.initClass(ThrownPlaneView, e);
@@ -28678,6 +28684,20 @@ Class(function ThrownPlane() {
             createPlane()
         }
         _ping.display(e.coords);
+        if (isLive && !Tests.AT_IO()) {
+            var liveLocation = e.location || e.address || e.city || "Planet Earth";
+            _this.events.fire(PlanesEvents.ADD_REALTIME, {
+                location: liveLocation,
+                address: e.address || liveLocation,
+                city: e.city || e.address || liveLocation,
+                country: e.country || "",
+                country_name: e.country_name || e.country || "",
+                coords: {
+                    lat: e.coords[0],
+                    lng: e.coords[1]
+                },
+            })
+        }
         if (Tests.AT_IO()) {
             return
         }
@@ -28749,6 +28769,7 @@ Class(function Stats() {
     var _timeoutSet, _timeoutStat, _timeoutStat2;
     var _stats = [];
     var _statsPool = [];
+    var _realTimeQueue = [];
     if (Tests.AT_IO()) {
         _stats = Config.IO_LOCATION_LIST
     } else {
@@ -28803,16 +28824,20 @@ Class(function Stats() {
         showStat()
     }
     function showStat() {
-        _index++;
-        if (_index == _set.length) {
-            _timeoutSet = _this.delayedCall(startSet, 20000);
-            return
+        var stat;
+        var isRealtime = _realTimeQueue.length > 0;
+        if (isRealtime) {
+            stat = _realTimeQueue.shift();
+        } else {
+            _index++;
+            if (_index == _set.length) {
+                _timeoutSet = _this.delayedCall(startSet, 20000);
+                return
+            }
+            stat = _set[_index]
         }
-        var stat = _realTimeLocation ? _realTimeLocation : _set[_index];
-        if (_realTimeLocation) {
-            _realTimeLocation = null
-        }
-        var position = _movement.zoomToLocation(stat, _index === 0);
+        _realTimeLocation = null;
+        var position = _movement.zoomToLocation(stat, _index === 0 && !isRealtime);
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
@@ -28826,6 +28851,8 @@ Class(function Stats() {
     function stopStats() {
         _movement.stopStats();
         _text.animateOut();
+        _realTimeQueue = [];
+        _realTimeLocation = null;
         if (_timeoutSet) {
             clearTimeout(_timeoutSet)
         }
@@ -28837,7 +28864,18 @@ Class(function Stats() {
         }
     }
     function addRealtimeLocation(location) {
-        _realTimeLocation = location
+        _realTimeLocation = location;
+        _realTimeQueue.unshift(location);
+        if (_timeoutSet) {
+            clearTimeout(_timeoutSet)
+        }
+        if (_timeoutStat) {
+            clearTimeout(_timeoutStat)
+        }
+        if (_timeoutStat2) {
+            clearTimeout(_timeoutStat2)
+        }
+        showStat()
     }
     this.start = function() {
         _timeoutSet = _this.delayedCall(startSet, Tests.AT_IO() ? 60000 : 10000)
