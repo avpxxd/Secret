@@ -26636,9 +26636,7 @@ Data.Class(function Planes() {
         }, 250)
     }
     this.createPlane = function(data, callback) {
-        var err = new Error();
-        var stack = err.stack.toString();
-        if (!Device.mobile || !stack.strpos("endFlow")) {
+        if (!Device.mobile) {
             return callback()
         }
         var id = Utils.timestamp();
