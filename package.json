@@ -1,0 +1,13 @@
+{
+  "name": "paper-planes-restoration",
+  "version": "1.0.0",
+  "description": "Restoration of the paperplanes.world interactive experience",
+  "private": true,
+  "scripts": {
+    "dev": "npx serve . --cors --no-clipboard",
+    "start": "npm run dev"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}
