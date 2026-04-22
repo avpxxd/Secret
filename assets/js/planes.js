@@ -28785,6 +28785,9 @@ Class(function ThrownPlane() {
                 }
             }
         };
+        this.launchPlane = function(data) {
+            newPlane(data, true)
+        }
         if (isLive && !Tests.AT_IO()) {
             createPlane()
         } else if (needsThrottle()) {
@@ -28913,8 +28916,8 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat = _this.delayedCall(showStat, 100000);
-        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 100000)
+        _timeoutStat = _this.delayedCall(showStat, 150000);
+        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 150000)
     }
     function addHandlers() {
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopStats);
@@ -31920,7 +31923,7 @@ Class(function ThrownPlaneGeometry() {
 Class(function IntroDesktopView() {
     Inherit(this, View);
     var _this = this;
-    var $this, $start, $qr, $connect, $url;
+    var $this, $start, $qr, $connect, $url, $outerSpace;
     (function() {
         initHTML();
         style()
@@ -31931,7 +31934,8 @@ Class(function IntroDesktopView() {
         $start = $this.create("Start");
         $qr = $this.create("Qr");
         $connect = $this.create("Connect");
-        $url = $this.create("Url")
+        $url = $this.create("Url");
+        $outerSpace = $this.create("OuterSpace")
     }
     function style() {
         $this.css({
@@ -31975,6 +31979,19 @@ Class(function IntroDesktopView() {
             left: 0,
             fontWeight: "bold",
         });
+        $outerSpace.html("Outer Space").css({
+            position: "absolute",
+            top: "50%",
+            right: 0,
+            left: 0,
+            marginTop: 120,
+            fontSize: 24,
+            fontWeight: "bold",
+            letterSpacing: 2,
+            cursor: "pointer",
+            pointerEvents: "auto",
+            zIndex: 9999,
+        });
         $start.css({
             opacity: 0
         });
@@ -31986,7 +32003,30 @@ Class(function IntroDesktopView() {
         });
         $url.css({
             opacity: 0
-        })
+        });
+        $outerSpace.css({
+            opacity: 0
+        });
+        $outerSpace.touchClick(null, sendOuterSpacePlane)
+    }
+    function sendOuterSpacePlane() {
+        var data = {
+            id: Utils.timestamp(),
+            coords: [0, 0],
+            color: "#ffffff",
+            scale: {
+                x: 1.05,
+                z: 0.95
+            },
+            location: "Outer Space",
+            address: "Outer Space",
+            city: "Outer Space",
+            region: "",
+            country: "Space",
+            country_name: "Outer Space"
+        };
+        ThrownPlane.instance().launchPlane(data);
+        Data.Planes.throwPlane(data)
     }
     this.animateIn = function() {
         $start.tween({
@@ -32007,6 +32047,9 @@ Class(function IntroDesktopView() {
             }, 1000, "easeOutCubic", 5000)
         });
         $url.tween({
+            opacity: 1
+        }, 1000, "easeOutCubic", 10500);
+        $outerSpace.tween({
             opacity: 1
         }, 1000, "easeOutCubic", 10500)
     }
@@ -32415,7 +32458,7 @@ Class(function StatsMeshText() {
         _captionShader.uniforms.yOffset.value = -100;
         _titleShader.tween("opacity", 1, 8000, "easeOutCubic", 5000);
         _captionShader.tween("opacity", 1, 8000, "easeOutCubic", 4700);
-        _this.delayedCall(_this.animateOut, 100000);
+        _this.delayedCall(_this.animateOut, 150000);
         TweenManager.tween(_rotation, {
             strength: 0.1
         }, 6000, "easeOutCubic", 4000, null, updateRotation)
