@@ -27419,22 +27419,15 @@ Data.Class(function User() {
         })
     }
     function getAccurateGeo() {
-        XHR.get("https://ipapi.co/json/", function(data) {
+        XHR.get("/geo", function(data) {
             try {
                 if (typeof data == "string") {
                     data = JSON.parse(data)
                 }
-                if (!data || data.error) {
-                    throw new Error("IP lookup failed")
+                if (!data || !data.country || !data.city) {
+                    throw new Error("Geo lookup failed")
                 }
-                _data = {
-                    region: data.region_code || data.region || "",
-                    city: data.city || "",
-                    country: data.country_code || data.country || "",
-                    country_name: data.country || "",
-                    coords: [data.latitude || 0, data.longitude || 0],
-                    ip: data.ip || ""
-                };
+                _data = data;
                 checkEmpty();
                 Storage.set("accurate_geo", _data)
             } catch (e) {
