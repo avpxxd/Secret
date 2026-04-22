@@ -26542,7 +26542,6 @@ Data.Class(function Planes() {
                 FirebasePlanesBridge.getPlane(obj.id).then(function(e) {
                     if (!e || !e.data) {
                         _myPlanes.push(obj);
-                        console.log("unsuccessful", obj.id);
                         load();
                         return
                     }
@@ -26553,7 +26552,6 @@ Data.Class(function Planes() {
                     load()
                 }).catch(function() {
                     _myPlanes.push(obj);
-                    console.log("unsuccessful", obj.id);
                     load()
                 });
                 return
@@ -26564,7 +26562,6 @@ Data.Class(function Planes() {
             }, function(e) {
                 if (!e.data) {
                     _myPlanes.push(obj);
-                    console.log("unsuccessful", obj.id);
                     load();
                     return
                 }
@@ -26737,7 +26734,6 @@ Data.Class(function Planes() {
             if (usesFirebaseBackend()) {
                 FirebasePlanesBridge.getPlane(obj.id).then(function(e) {
                     if (!e || !e.data) {
-                        console.log("unsuccessful", obj.id);
                         callback({
                             success: false
                         });
@@ -26759,7 +26755,6 @@ Data.Class(function Planes() {
                     id: obj.id
                 }, function(e) {
                     if (!e.data) {
-                        console.log("unsuccessful", obj.id);
                         callback({
                             success: false
                         });
@@ -26864,6 +26859,19 @@ Data.Class(function Socket() {
         AssetLoader.loadAssets([Hydra.CDN + "assets/js/lib/_socketio.js"], Data.triggerData)
     }
     function init() {
+        if (usesFirebaseBackend()) {
+            _type = "firebase";
+            _io = true;
+            _pipe = FirebasePlanesBridge.connectSocket({
+                type: _type,
+                experience: _exp,
+                onMessage: receiveData,
+                onEvent: receiveEvent,
+                onSide: sideMessage,
+                onReady: pipeReady
+            });
+            return
+        }
         if (_this.SCREEN_IO) {
             Pipe = SocketPipeIO;
             _type = "io";
@@ -27012,6 +27020,10 @@ Class(function SocketPipeIO(_type, _exp) {
     var _send = {};
     var _alerted = false;
     (function() {
+        if (usesFirebaseBackend()) {
+            _this.events.fire(HydraEvents.READY);
+            return
+        }
         if (!Hydra.HASH.strpos("side")) {
             initSockets(_config.directPortStart);
             initSockets(_config.funnelPortStart)
@@ -27121,6 +27133,10 @@ Class(function SocketPipeReceiver(_type, _exp) {
     var _io, _send;
     var _alerted = false;
     (function() {
+        if (usesFirebaseBackend()) {
+            _this.events.fire(HydraEvents.READY);
+            return
+        }
         _this.select(connect)
     }
     )();
@@ -27268,6 +27284,10 @@ Class(function SocketPipeSender(_type, _exp, _atIO) {
     var _alerted = false;
     var _send = {};
     (function() {
+        if (usesFirebaseBackend()) {
+            _this.events.fire(HydraEvents.READY);
+            return
+        }
         if (_atIO) {
             _this.selectDirect(connect)
         } else {
