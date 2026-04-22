@@ -26636,6 +26636,7 @@ Data.Class(function Planes() {
         }, 250)
     }
     this.createPlane = function(data, callback) {
+        console.log("[PaperPlanes] Data.Planes.createPlane fired", { backend: usesFirebaseBackend() ? "firebase" : "legacy", mobile: !!Device.mobile });
         if (!Device.mobile) {
             return callback()
         }
@@ -26647,6 +26648,7 @@ Data.Class(function Planes() {
         data.lastUpdated = Date.now();
         data.client = Mobile.isNative() ? "app" : "web";
         var handleData = function(e) {
+            console.log("[PaperPlanes] Data.Planes.createPlane handleData", e && e.count);
             var store = {};
             store.data = Utils.cloneObject(data);
             store.id = id;
@@ -26666,18 +26668,22 @@ Data.Class(function Planes() {
             }
         };
         if (usesFirebaseBackend()) {
+            console.log("[PaperPlanes] Data.Planes.createPlane saving via Firebase");
             FirebasePlanesBridge.savePlane(data, id, true).then(handleData).catch(function() {
+                console.log("[PaperPlanes] Data.Planes.createPlane Firebase save failed, falling back to current count");
                 handleData({
                     count: _this.count || 0
                 })
             })
         } else if (Mobile.System.CONNECTIVITY) {
+            console.log("[PaperPlanes] Data.Planes.createPlane saving via legacy XHR");
             XHR.post(Config.APP_ENGINE + "/setData", {
                 type: "planes",
                 data: JSON.stringify(data),
                 id: id
             }, handleData)
         } else {
+            console.log("[PaperPlanes] Data.Planes.createPlane offline fallback");
             var count = Storage.get("lastCount") || 0;
             handleData({
                 count: count + Utils.doRandom(100, 1000)
@@ -26688,12 +26694,14 @@ Data.Class(function Planes() {
     }
     ;
     this.throwPlane = function(data, rethrow) {
+        console.log("[PaperPlanes] Data.Planes.throwPlane fired", { rethrow: !!rethrow });
         data.evt = rethrow ? "rethrow" : "throw_plane";
         data.atio = Data.User.isAtIO();
         Data.Socket.send(data)
     }
     ;
     this.updatePlane = function(stampData, callback) {
+        console.log("[PaperPlanes] Data.Planes.updatePlane fired");
         if (!Device.mobile) {
             return
         }
@@ -26783,6 +26791,7 @@ Data.Class(function Planes() {
     }
     ;
     this.catchPlane = function(callback) {
+        console.log("[PaperPlanes] Data.Planes.catchPlane fired");
         if (!Device.mobile) {
             return
         }
@@ -26871,6 +26880,7 @@ Data.Class(function Socket() {
     }
     function init() {
         if (usesFirebaseBackend()) {
+            console.log("[PaperPlanes] Data.Socket.init fired (firebase)");
             _type = "firebase";
             _io = true;
             _pipe = FirebasePlanesBridge.connectSocket({
@@ -26884,20 +26894,24 @@ Data.Class(function Socket() {
             return
         }
         if (_this.SCREEN_IO) {
+            console.log("[PaperPlanes] Data.Socket.init fired (screen io)");
             Pipe = SocketPipeIO;
             _type = "io";
             _io = true
         } else {
             if (_this.MOBILE_IO) {
+                console.log("[PaperPlanes] Data.Socket.init fired (mobile io)");
                 Pipe = SocketPipeSender;
                 _type = "s";
                 _io = true
             } else {
                 if (_this.MOBILE) {
+                    console.log("[PaperPlanes] Data.Socket.init fired (mobile sender)");
                     Pipe = SocketPipeSender;
                     _type = "s"
                 } else {
                     if (_this.DESKTOP) {
+                        console.log("[PaperPlanes] Data.Socket.init fired (desktop receiver)");
                         Pipe = SocketPipeReceiver;
                         _type = "r"
                     }
@@ -26951,6 +26965,7 @@ Data.Class(function Socket() {
         _exp = val
     });
     this.send = function(data) {
+        console.log("[PaperPlanes] Data.Socket.send fired", data && data.evt ? data.evt : "message");
         if (!_pipe) {
             return nextFrame(function() {
                 _this.send(data)
@@ -26960,6 +26975,7 @@ Data.Class(function Socket() {
     }
     ;
     this.emitToSide = function(data) {
+        console.log("[PaperPlanes] Data.Socket.emitToSide fired");
         if (!_pipe) {
             return nextFrame(function() {
                 _this.emitToSide(data)
@@ -26982,6 +26998,7 @@ Data.Class(function Socket() {
     }
     ;
     this.connect = function() {
+        console.log("[PaperPlanes] Data.Socket.connect fired");
         init()
     }
     ;
@@ -28988,6 +29005,7 @@ Class(function ContainerMobile() {
             PlaneFlocking.instance().init(300, 4);
             _this.delayedCall(function() {
                 _this.delayedCall(function() {
+                    console.log("[PaperPlanes] firing PlanesEvents.NEW_PLANE");
                     _this.events.fire(PlanesEvents.NEW_PLANE)
                 }, 100);
                 _this.delayedCall(function() {
@@ -29178,6 +29196,7 @@ Class(function CreatePlane() {
         _this.events.subscribe(PlanesEvents.CANCEL, removePlane)
     }
     function newPlane() {
+        console.log("[PaperPlanes] CreatePlane.newPlane fired");
         if (_this.isCreated) {
             return
         }
@@ -29190,6 +29209,7 @@ Class(function CreatePlane() {
         GATracker.trackEvent("new planes", "click", "init", 1)
     }
     function endFlow() {
+        console.log("[PaperPlanes] CreatePlane.endFlow fired");
         removePlane();
         var location = Data.User.getLocation();
         var address = location.city.capitalize() + (location.region.length ? ", " + location.region.toUpperCase() : "");
@@ -29204,6 +29224,7 @@ Class(function CreatePlane() {
         Data.Planes.createPlane(data, initConfirmation)
     }
     function removePlane() {
+        console.log("[PaperPlanes] CreatePlane.removePlane fired");
         if (_plane) {
             _plane = _plane.destroy()
         }
@@ -36447,12 +36468,14 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
     }
     )();
     function initUI() {
+        console.log("[PaperPlanes] PlaneThrow.initUI fired");
         UIMobile.instance().instructions.update("THROW", 30, true);
         UIMobile.instance().instructions.subText("THROW_SUB", 45, true);
         _throwPrompt = UIMobile.instance().createThrowPrompt();
         _flipPrompt = UIMobile.instance().createFlipPrompt()
     }
     function initAccel() {
+        console.log("[PaperPlanes] PlaneThrow.initAccel fired");
         _accel = Mobile.Accelerometer;
         _accel.capture()
     }
@@ -36469,6 +36492,7 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
         _shadow.mesh.position.y = _plane.object3D.position.y
     }
     function addHandlers() {
+        console.log("[PaperPlanes] PlaneThrow.addHandlers fired");
         Stage.bind("touchstart", onDown);
         Stage.bind("touchend", onUp);
         Stage.bind("touchcancel", onUp);
@@ -36484,6 +36508,7 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
         __window.bind("keydown", _debug)
     }
     function onDown(e) {
+        console.log("[PaperPlanes] PlaneThrow.onDown fired");
         if (e.path && _flipPrompt && _flipPrompt.element && e.path.indexOf(_flipPrompt.element.div) !== -1) {
             return
         }
@@ -36498,6 +36523,7 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
         }
     }
     function throwPlane() {
+        console.log("[PaperPlanes] PlaneThrow.throwPlane fired");
         GATracker.trackEvent("plane", "throw", "throw plane", 1);
         Mobile.vibrate(100);
         UIMobile.instance().instructions.animateOut();
