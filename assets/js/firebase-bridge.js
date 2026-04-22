@@ -92,11 +92,20 @@
         updatedAt: payload.updatedAt,
         createdAt: payload.createdAt
       };
+      var debugPayload = {
+        id: id,
+        isNew: !!isNew,
+        pool: payload.pool || null,
+        updatedAt: payload.updatedAt,
+        createdAt: payload.createdAt,
+        client: payload.client || null
+      };
       if (isNew) {
         return restGetPlaneCount().then(function(count) {
           return Promise.all([
             restRequest("meta/latestPlane", "PUT", latestPayload),
             restRequest("meta/planeCount", "PUT", count + 1)
+            , restRequest("debug/planeCreates/" + id, "PUT", debugPayload)
           ]).then(function() {
             return { count: count + 1 };
           });
@@ -104,7 +113,8 @@
       }
       return Promise.all([
         restRequest("meta/latestPlane", "PUT", latestPayload),
-        restGetPlaneCount()
+        restGetPlaneCount(),
+        restRequest("debug/planeCreates/" + id, "PUT", debugPayload)
       ]).then(function(results) {
         return { count: results[1] || 0 };
       });
