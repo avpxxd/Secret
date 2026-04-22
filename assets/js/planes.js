@@ -11277,7 +11277,7 @@ Class(function Copy() {
     });
     this.INTRO = "Throw and catch<br />paper planes with people<br />around the world";
     this.INTRO_DESKTOP = "Use your phone to throw and catch<br />paper planes with people around the world";
-    this.BLOCK_SUB = "This is a mobile companion experience<br/>Join in at <strong>planes.damvan.ca</strong>";
+    this.BLOCK_SUB = "This experience requires location data.<br/>You'll need to <strong>Enable Location Services.</strong>";
     this.DESKTOP_SUB = "Join on your phone at<br/> <strong>planes.damvan.ca</strong>";
     this.AFTER = "Thanks for flying with us!";
     this.AFTER_DESKTOP = "Thanks for flying with us!<br />We hope you enjoyed the experience.";
