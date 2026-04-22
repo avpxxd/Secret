@@ -1,22 +1,13 @@
 @font-face {
 	font-family: 'roboto';
-	src: url('../fonts/roboto-regular-webfont.eot');
-	src: url('../fonts/roboto-regular-webfont.eot?#iefix') format('embedded-opentype'),
-	url('../fonts/roboto-regular-webfont.woff2') format('woff2'),
-	url('../fonts/roboto-regular-webfont.woff') format('woff'),
-	url('../fonts/roboto-regular-webfont.ttf') format('truetype'),
-	url('../fonts/roboto-regular-webfont.svg#robotoregular') format('svg');
+	src: url('../fonts/roboto-light-webfont.woff2') format('woff2');
 	font-weight: normal;
 	font-style: normal;
 }
 
 @font-face {
 	font-family:'din';
-	src: url('../fonts/DINPro-Bold_gdi.eot');
-	src: url('../fonts/DINPro-Bold_gdi.eot?#iefix') format('embedded-opentype'),
-	url('../fonts/DINPro-Bold_gdi.woff') format('woff'),
-	url('../fonts/DINPro-Bold_gdi.ttf') format('truetype'),
-	url('../fonts/DINPro-Bold_gdi.svg#DINPro-Bold') format('svg');
+	src: url('../fonts/DINPro-Bold_gdi.woff') format('woff');
 	font-weight: 700;
 	font-style: normal;
 	font-stretch: normal;
@@ -24,24 +15,14 @@
 
 @font-face {
 	font-family: 'roboto';
-	src: url('../fonts/roboto-bold-webfont.eot');
-	src: url('../fonts/roboto-bold-webfont.eot?#iefix') format('embedded-opentype'),
-	url('../fonts/roboto-bold-webfont.woff2') format('woff2'),
-	url('../fonts/roboto-bold-webfont.woff') format('woff'),
-	url('../fonts/roboto-bold-webfont.ttf') format('truetype'),
-	url('../fonts/roboto-bold-webfont.svg#roboto-boldbold') format('svg');
+	src: url('../fonts/roboto-bold-webfont.woff2') format('woff2');
 	font-weight: bold;
 	font-style: normal;
 }
 
 @font-face {
 	font-family: 'instruction';
-	src: url('../fonts/roboto-medium-webfont.eot');
-	src: url('../fonts/roboto-medium-webfont.eot?#iefix') format('embedded-opentype'),
-	url('../fonts/roboto-medium-webfont.woff2') format('woff2'),
-	url('../fonts/roboto-medium-webfont.woff') format('woff'),
-	url('../fonts/roboto-medium-webfont.ttf') format('truetype'),
-	url('../fonts/roboto-medium-webfont.svg#roboto-boldbold') format('svg');
+	src: url('../fonts/roboto-bold-webfont.woff2') format('woff2');
 	font-weight: 500;
 	font-style: normal;
 }
@@ -49,12 +30,7 @@
 
 @font-face {
 	font-family: 'roboto';
-	src: url('../fonts/roboto-light-webfont.eot');
-	src: url('../fonts/roboto-light-webfont.eot?#iefix') format('embedded-opentype'),
-	url('../fonts/roboto-light-webfont.woff2') format('woff2'),
-	url('../fonts/roboto-light-webfont.woff') format('woff'),
-	url('../fonts/roboto-light-webfont.ttf') format('truetype'),
-	url('../fonts/roboto-light-webfont.svg#robotolight') format('svg');
+	src: url('../fonts/roboto-light-webfont.woff2') format('woff2');
 	font-weight: 400;
 	font-style: normal;
 }

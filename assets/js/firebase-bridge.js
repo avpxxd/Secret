@@ -4,7 +4,8 @@
     db: null,
     socketRef: null,
     socketHandlers: [],
-    liveHandlers: []
+    liveHandlers: [],
+    authReady: null
   };
 
   function hasConfig() {
@@ -24,12 +25,22 @@
     }
     state.db = firebase.database();
     if (firebase.auth) {
-      firebase.auth().signInAnonymously().catch(function(error) {
+      state.authReady = firebase.auth().signInAnonymously().then(function() {
+        return true;
+      }).catch(function(error) {
         console.warn("Firebase anonymous auth unavailable", error && error.message ? error.message : error);
+        return true;
       });
+    } else {
+      state.authReady = Promise.resolve(true);
     }
     state.initialized = true;
     return true;
+  }
+
+  function ensureReady() {
+    init();
+    return state.authReady || Promise.resolve(true);
   }
 
   function readLocalPlaneFallback() {
@@ -92,33 +103,35 @@
       return Promise.reject(new Error("Firebase is not configured"));
     }
 
-    var payload = clone(data);
-    payload.id = id;
-    payload.data = JSON.stringify(payload);
-    payload.updatedAt = Date.now();
-    if (!payload.createdAt) {
-      payload.createdAt = payload.updatedAt;
-    }
+    return ensureReady().then(function() {
+      var payload = clone(data);
+      payload.id = id;
+      payload.data = JSON.stringify(payload);
+      payload.updatedAt = Date.now();
+      if (!payload.createdAt) {
+        payload.createdAt = payload.updatedAt;
+      }
 
-    var write = planeRef(id).set(payload);
-    if (isNew) {
+      var write = planeRef(id).set(payload);
+      if (isNew) {
+        return write.then(function() {
+          return getPlaneCount().then(function(count) {
+            return { count: count - 1 };
+          });
+        }).catch(function(error) {
+          console.error("Firebase plane create failed", error);
+          throw error;
+        });
+      }
+
       return write.then(function() {
         return getPlaneCount().then(function(count) {
-          return { count: count };
+          return { count: count - 1 };
         });
       }).catch(function(error) {
-        console.error("Firebase plane create failed", error);
+        console.error("Firebase plane update failed", error);
         throw error;
       });
-    }
-
-    return write.then(function() {
-      return getPlaneCount().then(function(count) {
-        return { count: count };
-      });
-    }).catch(function(error) {
-      console.error("Firebase plane update failed", error);
-      throw error;
     });
   }
 
@@ -126,8 +139,10 @@
     if (!init()) {
       return Promise.reject(new Error("Firebase is not configured"));
     }
-    return planeRef(id).once("value").then(function(snapshot) {
-      return snapshot.val();
+    return ensureReady().then(function() {
+      return planeRef(id).once("value").then(function(snapshot) {
+        return snapshot.val();
+      });
     });
   }
 
@@ -135,13 +150,15 @@
     if (!init()) {
       return Promise.reject(new Error("Firebase is not configured"));
     }
-    return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(snapshot) {
-      var value = snapshot.val();
-      if (!value) {
-        return null;
-      }
-      var keys = Object.keys(value);
-      return value[keys[0]];
+    return ensureReady().then(function() {
+      return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(snapshot) {
+        var value = snapshot.val();
+        if (!value) {
+          return null;
+        }
+        var keys = Object.keys(value);
+        return value[keys[0]];
+      });
     });
   }
 
@@ -149,20 +166,22 @@
     if (!init()) {
       return Promise.reject(new Error("Firebase is not configured"));
     }
-    return planesRef().orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
-      var value = snapshot.val();
-      if (!value) {
-        return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
-          var fallbackValue = fallbackSnapshot.val();
-          if (fallbackValue) {
-            var fallbackKeys = Object.keys(fallbackValue);
-            return fallbackValue[fallbackKeys[0]];
-          }
-          return readLocalPlaneFallback();
-        });
-      }
-      var keys = Object.keys(value);
-      return value[keys[Math.floor(Math.random() * keys.length)]];
+    return ensureReady().then(function() {
+      return planesRef().orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
+        var value = snapshot.val();
+        if (!value) {
+          return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
+            var fallbackValue = fallbackSnapshot.val();
+            if (fallbackValue) {
+              var fallbackKeys = Object.keys(fallbackValue);
+              return fallbackValue[fallbackKeys[0]];
+            }
+            return readLocalPlaneFallback();
+          });
+        }
+        var keys = Object.keys(value);
+        return value[keys[Math.floor(Math.random() * keys.length)]];
+      });
     });
   }
 
@@ -170,6 +189,7 @@
     if (!init()) {
       return null;
     }
+    ensureReady();
 
     var socketId = state.db.ref("connections").push().key;
     state.socketRef = state.db.ref("connections/" + socketId);

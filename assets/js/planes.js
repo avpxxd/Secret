@@ -5284,7 +5284,12 @@ Mobile.Class(function ScreenLock() {
         var height = document.body.clientHeight;
         _lockedNodes.forEach(function(e) {
             if (Device.getFullscreen() && window.screen && window.screen.orientation.lock) {
-                window.screen.orientation.lock("portrait");
+                try {
+                    var lock = window.screen.orientation.lock("portrait");
+                    if (lock && lock.catch) {
+                        lock.catch(function() {})
+                    }
+                } catch (error) {}
                 e.object.size(width, height);
                 e.object.div.style.transformOrigin = "";
                 e.object.div.style.transform = "";
@@ -26430,9 +26435,13 @@ Data.Class(function WebNotifications() {
             return
         }
         _this.requested = true;
+        if (!window.PUSH_PUBLIC_KEY && !window.VAPID_PUBLIC_KEY) {
+            return
+        }
         if (_registration && _registration.pushManager && _registration.pushManager.subscribe) {
             return _registration.pushManager.subscribe({
-                userVisibleOnly: true
+                userVisibleOnly: true,
+                applicationServerKey: window.PUSH_PUBLIC_KEY || window.VAPID_PUBLIC_KEY
             }).then(function(pushSubscription) {
                 return new Promise(function(resolve, reject) {
                     _subscription = pushSubscription;
@@ -26980,7 +26989,7 @@ function activeServersURL() {
     return isLocalSocketHost() ? socketProtocol() + socketServerHost() + ":3001/active_servers.json?" + Utils.timestamp() : "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json?" + Utils.timestamp()
 }
 function usesFirebaseBackend() {
-    return !!(window.FirebasePlanesBridge && FirebasePlanesBridge.isAvailable && FirebasePlanesBridge.isAvailable() && !isLocalSocketHost())
+    return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FirebasePlanesBridge && !isLocalSocketHost())
 }
 Module(function SocketConfig() {
     this.exports = {
@@ -27575,7 +27584,7 @@ Class(function AudioController() {
         var klangLocalUrl;
         if (Device.mobile) {
             klangRemoteUrl = "https://klangfiles.s3.amazonaws.com/uploads/projects/l0k3G/config.js";
-            klangLocalUrl = "mobile"
+            klangLocalUrl = "desktop_lq"
         } else {
             if (!Device.mobile && Tests.AT_IO()) {
                 klangRemoteUrl = "https://klangfiles.s3.amazonaws.com/uploads/projects/6iTfI/config.js";
