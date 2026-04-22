@@ -29415,7 +29415,7 @@ Class(function CreatePlane() {
         console.log("[PaperPlanes] CreatePlane.endFlow fired");
         removePlane();
         var location = Data.User.getLocation();
-        var address = location.address || location.city || "Planet Earth";
+        var address = formatLocationText(location.city || "", location.region || "", location.country_name || location.country);
         var date = DateUtil.getDate();
         var data = {
             date: date.text,
@@ -36771,8 +36771,8 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
             x: _plane.mesh.scale.x,
             z: _plane.mesh.scale.z
         };
-        var city = stampLocation.city || PlaneStampTexture.DATA.city || stampLocation.address || PlaneStampTexture.DATA.address || "Planet Earth";
-        var address = formatLocationText(city, region);
+        var city = stampLocation.city || PlaneStampTexture.DATA.city || "";
+        var address = formatLocationText(city, region, stampLocation.country_name || PlaneStampTexture.DATA.country_name || stampLocation.country || PlaneStampTexture.DATA.country);
         var country = stampLocation.country || PlaneStampTexture.DATA.country || "";
         var countryName = stampLocation.country_name || PlaneStampTexture.DATA.country_name || country;
         var location = formatLocationText(city, region, countryName);
@@ -37360,7 +37360,7 @@ Class(function PeaceDayStamp(_s) {
             date.x = -200;
             date.y = -200;
             mask.add(date);
-            var locationText = formatLocationText(data.city || data.address || "Planet Earth", data.region || data.address, data.country_name || data.country) || data.location || (data.address + ", " + (data.country_name || data.country));
+            var locationText = formatLocationText(data.city || "", data.region || "", data.country_name || data.country) || data.location || data.address || "Planet Earth";
             var location = new CanvasTexture(drawArcText(locationText, 200, true),440,440);
             location.x = -220;
             location.y = -220;
