@@ -10,7 +10,7 @@
 
   function hasConfig() {
     var config = window.FIREBASE_CONFIG || {};
-    return !!(window.firebase && firebase.apps && config.apiKey && config.authDomain && config.databaseURL && config.projectId && config.appId && config.apiKey.indexOf("YOUR_") !== 0);
+    return !!(config.apiKey && config.authDomain && config.databaseURL && config.projectId && config.appId && config.apiKey.indexOf("YOUR_") !== 0);
   }
 
   function init() {
@@ -18,6 +18,9 @@
       return true;
     }
     if (!hasConfig()) {
+      return false;
+    }
+    if (!window.firebase) {
       return false;
     }
     if (!firebase.apps.length) {
@@ -116,7 +119,7 @@
       if (isNew) {
         return write.then(function() {
           return getPlaneCount().then(function(count) {
-            return { count: count - 1 };
+            return { count: count };
           });
         }).catch(function(error) {
           console.error("Firebase plane create failed", error);
@@ -126,7 +129,7 @@
 
       return write.then(function() {
         return getPlaneCount().then(function(count) {
-          return { count: count - 1 };
+          return { count: count };
         });
       }).catch(function(error) {
         console.error("Firebase plane update failed", error);

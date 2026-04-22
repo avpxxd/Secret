@@ -26511,6 +26511,7 @@ Data.Class(function Planes() {
     var _offline = Storage.get("uploadOffline") || [];
     this.count = 0;
     (function() {
+        refreshCount();
         if (Device.mobile) {
             retrievePlanes()
         }
@@ -26584,6 +26585,15 @@ Data.Class(function Planes() {
         _offline.push(data);
         Storage.set("uploadOffline", _offline)
     }
+    function refreshCount() {
+        if (!usesFirebaseBackend()) {
+            return
+        }
+        FirebasePlanesBridge.getPlaneCount().then(function(count) {
+            _this.count = count;
+            Storage.set("lastCount", count)
+        }).catch(function() {})
+    }
     function addListeners() {
         if (Device.mobile) {
             _this.events.subscribe(Mobile.Events.INTERNET_STATUS, internetStatus)
@@ -26641,7 +26651,7 @@ Data.Class(function Planes() {
             store.data = Utils.cloneObject(data);
             store.id = id;
             store.subscriptionId = subscriptionID;
-            store.number = e.count + 1;
+            store.number = e.count;
             store.pool = store.data.pool;
             _createdPlanes.push(store);
             if (_createdPlanes.length > 50) {
@@ -26649,9 +26659,10 @@ Data.Class(function Planes() {
             }
             Storage.set("created_planes", _createdPlanes);
             _this.delayedCall(retrievePlanes, 500);
-            _this.count = e.count + 1;
+            _this.count = e.count;
+            Storage.set("lastCount", e.count);
             if (typeof callback == "function") {
-                callback(e.count + 1)
+                callback(e.count)
             }
         };
         if (Mobile.System.CONNECTIVITY) {
@@ -26700,7 +26711,8 @@ Data.Class(function Planes() {
         _caughtPlane.data.stamps.push(stampData);
         if (usesFirebaseBackend()) {
             FirebasePlanesBridge.savePlane(_caughtPlane.data, _caughtPlane.id, false).then(function(e) {
-                _this.count = e.count + 1;
+                _this.count = e.count;
+                Storage.set("lastCount", e.count);
                 _caughtPlane = null;
                 callback()
             }).catch(function() {
@@ -26713,7 +26725,8 @@ Data.Class(function Planes() {
                 data: JSON.stringify(_caughtPlane.data),
                 id: _caughtPlane.id
             }, function(e) {
-                _this.count = e.count + 1;
+                _this.count = e.count;
+                Storage.set("lastCount", e.count);
                 _caughtPlane = null;
                 callback()
             })
@@ -26997,7 +27010,7 @@ function activeServersURL() {
     return isLocalSocketHost() ? socketProtocol() + socketServerHost() + ":3001/active_servers.json?" + Utils.timestamp() : "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json?" + Utils.timestamp()
 }
 function usesFirebaseBackend() {
-    return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FirebasePlanesBridge && !isLocalSocketHost())
+    return !!(window.FIREBASE_CONFIG && window.FIREBASE_CONFIG.apiKey && window.FirebasePlanesBridge && window.FirebasePlanesBridge.isAvailable && window.FirebasePlanesBridge.isAvailable() && !isLocalSocketHost())
 }
 Module(function SocketConfig() {
     this.exports = {
