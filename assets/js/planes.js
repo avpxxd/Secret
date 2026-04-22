@@ -26590,8 +26590,11 @@ Data.Class(function Planes() {
             return
         }
         FirebasePlanesBridge.getPlaneCount().then(function(count) {
-            _this.count = count;
-            Storage.set("lastCount", count)
+            var current = Number(_this.count) || 0;
+            if (count > current) {
+                _this.count = count;
+                Storage.set("lastCount", count)
+            }
         }).catch(function() {})
     }
     function addListeners() {
@@ -32505,7 +32508,7 @@ Class(function ConfirmationView(isNew) {
             textAlign: "center",
         });
         var text = isNew ? Copy.CONFIRM_TEXT : Copy.CONFIRM_TEXT_BACK;
-        _title = _this.initClass(UITitle, text.replace("##", Utils.numberWithCommas(Data.Planes.count - 1)));
+        _title = _this.initClass(UITitle, text.replace("##", Utils.numberWithCommas(Math.max(Data.Planes.count - 1, 0))));
         $touchPrompt.html(Copy.CONTINUE).css({
             top: "65%",
             left: 0,
