@@ -27511,8 +27511,7 @@ Data.Class(function User() {
                     })
                 } catch (e) {
                     XHR.get("assets/data/_geo.json", function(fallbackData) {
-                        _this.data(fallbackData);
-                        Storage.set("accurate_geo", fallbackData)
+                        applyGeo(fallbackData)
                     }).onError = function() {
                         _this.data(clearGeo)
                     }
