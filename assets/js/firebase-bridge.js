@@ -8,7 +8,8 @@
     socketHandlers: [],
     liveHandlers: [],
     authReady: null,
-    lastSelectedPlaneId: null
+    lastSelectedPlaneId: null,
+    planeHistory: {}
   };
 
   function hasConfig() {
@@ -428,6 +429,28 @@
     if (!init()) {
       return Promise.resolve(readLocalPlaneFallback());
     }
+    function getHistoryKey() {
+      return "firebase_selected_planes_" + pool;
+    }
+    function readHistory() {
+      var history = state.planeHistory[pool];
+      if (history) {
+        return history.slice();
+      }
+      try {
+        history = JSON.parse(window.localStorage.getItem(getHistoryKey()) || "[]");
+      } catch (error) {
+        history = [];
+      }
+      state.planeHistory[pool] = history;
+      return history.slice();
+    }
+    function writeHistory(history) {
+      state.planeHistory[pool] = history.slice(-12);
+      try {
+        window.localStorage.setItem(getHistoryKey(), JSON.stringify(state.planeHistory[pool]));
+      } catch (error) {}
+    }
     function choosePlaneFromValue(value) {
       value = value || {};
       var keys = Object.keys(value).filter(function(key) {
@@ -439,16 +462,27 @@
       if (!keys.length) {
         return null;
       }
-      if (keys.length > 1 && state.lastSelectedPlaneId) {
+      var history = readHistory();
+      if (keys.length > 1 && history.length) {
         var filteredKeys = keys.filter(function(key) {
-          return key !== state.lastSelectedPlaneId;
+          return history.indexOf(key) === -1;
         });
         if (filteredKeys.length) {
           keys = filteredKeys;
         }
       }
+      if (keys.length > 1 && state.lastSelectedPlaneId) {
+        var notLastKeys = keys.filter(function(key) {
+          return key !== state.lastSelectedPlaneId;
+        });
+        if (notLastKeys.length) {
+          keys = notLastKeys;
+        }
+      }
       var selectedKey = keys[Math.floor(Math.random() * keys.length)];
       state.lastSelectedPlaneId = selectedKey;
+      history.push(selectedKey);
+      writeHistory(history);
       return value[selectedKey];
     }
     return ensureReady().then(function() {
