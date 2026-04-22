@@ -28917,7 +28917,7 @@ Class(function Stats() {
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
         _timeoutStat = _this.delayedCall(showStat, 150000);
-        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 150000)
+        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 9500)
     }
     function addHandlers() {
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopStats);
