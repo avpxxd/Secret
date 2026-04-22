@@ -25752,13 +25752,20 @@ Class(function PinchMechanism() {
 });
 Module(function DefaultPlane() {
     function getPlane() {
+        var location = Data.User.getLocation() || {};
+        var address = location.city || "Planet Earth";
+        if (location.region) {
+            address += ", " + location.region.toUpperCase()
+        }
+        var country = (location.country || "").toUpperCase() || "US";
+        var countryName = location.country_name || location.country || "";
         return {
             id: Utils.timestamp(),
             data: {
-                pool: "west",
+                pool: Data.User.getPool(location.country, Data.User.getCoords()),
                 date: "May 18, 2016",
-                address: "Mountain view, CA",
-                country: "USA",
+                address: address,
+                country: country,
                 countries: 1,
                 stamps: [{
                     position: {
@@ -25770,9 +25777,10 @@ Module(function DefaultPlane() {
                     style: 7,
                     image: 1,
                     date: "05.18.16",
-                    address: "Mountain view, CA",
-                    country: "USA",
-                    coords: [34.052234, -118.243685]
+                    address: address,
+                    country: country,
+                    country_name: countryName,
+                    coords: Data.User.getCoords()
                 }]
             }
         }
