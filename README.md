@@ -12,49 +12,68 @@ A community restoration of [paperplanes.world](https://paperplanes.world/), the 
 | `index.html` | Entry point — loads styles and the game bundle |
 | `assets/css/style.css` | Global styles, font-face declarations |
 | `assets/js/planes.js` | Complete minified game bundle (WebGL / Three.js, ~1.3 MB) |
+| `assets/js/lib/three.min.js` | Three.js r98 (WebGL renderer) |
+| `assets/js/hydra/hydra-thread.js` | Hydra Web Worker thread |
+| `assets/images/earth/glow.png` | Earth atmosphere glow texture |
+| `assets/images/earth/shadows.jpg` | Earth shadow texture |
+| `assets/images/plane/matcap.jpg` | Plane matcap texture |
+| `assets/fonts/DINPro-Bold_gdi.woff` | DIN Pro Bold font |
+| `assets/fonts/din.png` | DIN bitmap atlas for WebGL UI |
+| `assets/audio/desktop_lq/config.js` | Klang audio config (desktop) |
 | `manifest.json` | Web App Manifest for PWA/home-screen support |
+| `fetch-assets.sh` | One-command script to download remaining assets from the live site |
 
 ---
 
 ## Running Locally
 
-The game bundle uses **absolute asset paths** (`/assets/…`), so you **must** serve the project from a local HTTP server — opening `index.html` directly from disk (`file://`) will not work.
+Asset paths are all **relative**, so the project works with any static server
+(including GitHub Pages) **and** with `file://` once all assets are present.
 
-### Option A — `serve` (recommended, zero config)
+### Step 1 — fetch remaining assets (one time)
+
+```bash
+bash fetch-assets.sh
+```
+
+This downloads every missing file from `https://paperplanes.world/assets/…`
+into the correct folder automatically.
+
+### Step 2 — start the dev server
 
 ```bash
 npm install          # installs the `serve` package
-npm run dev          # serves on http://localhost:3000
+npm run dev          # http://localhost:3000
 ```
 
 Then open **http://localhost:3000** in a modern browser with WebGL support.
 
-### Option B — Python (no install required)
+### Alternative: Python (no install)
 
 ```bash
 python3 -m http.server 3000
 ```
 
-### Option C — VS Code Live Server
+### Alternative: VS Code Live Server
 
-Install the [Live Server extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) and click **Go Live** in the status bar.
+Install the [Live Server extension](https://marketplace.visualstudio.com/items?itemName=ritwickdey.LiveServer) and click **Go Live**.
 
 ---
 
 ## Missing Assets
 
-The game bundle references assets that are not yet in this repository.  
-You will see 404 errors in the console until these are added.
+The game bundle references assets that are not yet committed to this repository.
+Run `bash fetch-assets.sh` from the repo root to download all of them at once.
+Manual list below for reference — all are fetched from `https://paperplanes.world/ASSET`.
 
 ### Images (`assets/images/`)
 
-| Sub-folder | Contents |
-|------------|----------|
+| Sub-folder | Files needed |
+|------------|--------------|
 | `common/` | `logo.png`, `logo-mask.png`, `iologo.png` |
-| `earth/` | `glow.png`, `shadows.jpg` |
-| `icons/` | Various UI icons (arrow, circle, close, hand, pin, plane buttons…) |
+| `icons/` | `arrow-back.png`, `arrow-down.png`, `arrow-up.png`, `circle.png`, `close.png`, `close-black.png`, `close-purple.png`, `done-button.png`, `hand-catch.png`, `hand-open.png`, `hand-throw.png`, `info.png`, `pin.png`, `plane-button.png`, `plane-button-bg.png`, `plane-logo.png`, `plane-logo-purple.png`, `plus.png`, `rotate-arrow.png`, `rotate-button.png`, `share.png` |
 | `loader/` | `plane-logo.png`, `plane-logo-black.png`, `spinner.png` |
-| `plane/` | `border.jpg`, `fold.jpg`, `matcap.jpg`, `matcap2.jpg`, `netmatcap.jpg`, `shadow.png` |
+| `plane/` | `border.jpg`, `fold.jpg`, `matcap2.jpg`, `netmatcap.jpg`, `shadow.png` |
 | `stamps/io/` | `0–3.png` |
 | `stamps/outlines/` | `0–7.png` |
 | `stamps/peace/` | `0–4.png` |
@@ -69,8 +88,8 @@ You will see 404 errors in the console until these are added.
 | `roboto-bold-webfont.woff2` / `.woff` / `.ttf` | Bold text |
 | `roboto-medium-webfont.woff2` / `.woff` / `.ttf` | Instructions |
 | `roboto-light-webfont.woff2` / `.woff` / `.ttf` | Light weight |
-| `DINPro-Bold_gdi.woff` / `.ttf` | Headings (DIN) |
-| `din.png` | Bitmap font atlas for WebGL UI |
+| `DINPro-Bold_gdi.ttf` | Headings (DIN) |
+| `din.txt` | Bitmap font metrics for WebGL UI |
 
 ### 3-D Geometry (`assets/geometry/`)
 
@@ -82,32 +101,35 @@ You will see 404 errors in the console until these are added.
 | `mobile/netBase.json` | Mobile net base |
 | `mobile/planeFold.json` | Mobile plane fold |
 
+### Shaders (`assets/shaders/`)
+
+| File | Used for |
+|------|---------|
+| `compiled.vs` | Compiled GLSL vertex/fragment shaders |
+
 ### Geographic Data (`assets/data/`)
 
 | File | Used for |
 |------|---------|
-| `_geo.json` | Country/location coordinates |
+| `_geo.json` | Country/location coordinates for globe labels |
 
 ### Audio (`assets/audio/`)
 
-The bundle loads audio configuration from AWS S3 (Klang service):
-
-- **Desktop LQ** — `https://klangfiles.s3.amazonaws.com/uploads/projects/6iTfI/config.js`
-- **Mobile / other** — `https://klangfiles.s3.amazonaws.com/uploads/projects/l0k3G/config.js`
-
-To host audio locally, mirror the Klang config + audio files under `assets/audio/desktop_lq/` and `assets/audio/mobile_lq/`.
+The bundle loads an audio configuration and then fetches the sound files from that config.
+The config at `assets/audio/desktop_lq/config.js` is already present.
+`fetch-assets.sh` will attempt to download the full `desktop_lq` set from the live site.
 
 ### JavaScript Libraries (`assets/js/lib/`)
 
-The game bundle dynamically loads these at runtime via a Web Worker:
-
 | File | Purpose |
 |------|---------|
-| `three.min.js` | Three.js — WebGL 3-D rendering |
-| `_socketio.js` | Socket.io client — multiplayer |
+| `_socketio.js` | Socket.io 2.x client — real-time multiplayer |
 
-Grab **Three.js r98** (the version used at the time) from the [three.js releases](https://github.com/mrdoob/three.js/releases/tag/r98) and place the minified build at `assets/js/lib/three.min.js`.  
-For Socket.io, use the **2.x** client: `npx browserify -r socket.io-client -o assets/js/lib/_socketio.js`.
+If the live-site fetch fails for `_socketio.js`, build it yourself:
+
+```bash
+npx browserify -r socket.io-client -o assets/js/lib/_socketio.js
+```
 
 ### Meta / PWA Assets (`assets/meta/`)
 
@@ -118,17 +140,19 @@ Social-sharing images, favicons, and Apple touch icons referenced in `index.html
 ## Milestone Checklist
 
 - [x] Rename bundled JS file to a valid path (`planes.js`)
-- [x] Fix `index.html` — remove duplicate script loads, remove dead audio bootstrap
+- [x] Fix `index.html` — use **relative** paths for CSS/JS (fixes GitHub Pages & `file://`)
+- [x] Add inline background fallback so the page is never blank-white
 - [x] Add `manifest.json` for PWA support
 - [x] Add `package.json` with zero-config local dev server
+- [x] Add `fetch-assets.sh` — one-command asset downloader
 - [x] Document project in README
-- [ ] Add `assets/js/lib/three.min.js` (Three.js r98)
-- [ ] Add `assets/js/lib/_socketio.js` (Socket.io 2.x client)
+- [ ] Run `bash fetch-assets.sh` to pull remaining assets from the live site
 - [ ] Add all images listed above
 - [ ] Add font files
 - [ ] Add geometry JSON files
 - [ ] Add geographic data JSON
-- [ ] Add audio config + sound files (or confirm remote Klang URLs still respond)
+- [ ] Add shaders
+- [ ] Add audio config + sound files
 - [ ] Add meta/PWA icons
 - [ ] (Optional) Add a backend socket server for multiplayer
 
