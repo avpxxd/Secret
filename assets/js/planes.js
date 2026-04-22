@@ -31796,7 +31796,7 @@ Class(function ThrownPlaneGeometry() {
 Class(function IntroDesktopView() {
     Inherit(this, View);
     var _this = this;
-    var $this, $start, $connect, $url;
+    var $this, $start, $qr, $connect, $url;
     (function() {
         initHTML();
         style()
@@ -31805,6 +31805,7 @@ Class(function IntroDesktopView() {
     function initHTML() {
         $this = _this.element;
         $start = $this.create("Start");
+        $qr = $this.create("Qr");
         $connect = $this.create("Connect");
         $url = $this.create("Url")
     }
@@ -31824,6 +31825,10 @@ Class(function IntroDesktopView() {
             lineHeight: 100,
             margin: "auto",
         });
+        $qr.size(180, 180).center().css({
+            top: "50%",
+            marginTop: -220,
+        }).bg("assets/images/common/qr-code.png");
         $connect.html(Copy.CONNECT).css({
             right: 0,
             bottom: "50%",
@@ -31836,6 +31841,9 @@ Class(function IntroDesktopView() {
             fontWeight: "bold",
         });
         $start.css({
+            opacity: 0
+        });
+        $qr.css({
             opacity: 0
         });
         $connect.css({
@@ -31852,6 +31860,13 @@ Class(function IntroDesktopView() {
             $start.tween({
                 opacity: 0
             }, 1000, "easeOutCubic", 3000, function() {})
+        });
+        $qr.tween({
+            opacity: 1
+        }, 1000, "easeOutCubic", 10500, function() {
+            $qr.tween({
+                opacity: 0
+            }, 1000, "easeOutCubic", 5000, function() {})
         });
         $connect.tween({
             opacity: 1

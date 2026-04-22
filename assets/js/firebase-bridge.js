@@ -25,7 +25,15 @@
       console.log("[PaperPlanes] Firebase bridge init failed (missing config)");
       return false;
     }
-    state.useRest = true;
+    if (!window.firebase || !firebase.database) {
+      console.log("[PaperPlanes] Firebase bridge init failed (firebase SDK unavailable)");
+      return false;
+    }
+    if (!firebase.apps || !firebase.apps.length) {
+      firebase.initializeApp(window.FIREBASE_CONFIG);
+    }
+    state.db = firebase.database();
+    state.useRest = false;
     state.initialized = true;
     console.log("[PaperPlanes] Firebase bridge init ready", { useRest: state.useRest });
     window.FirebasePlanesBridgeReady = true;
@@ -371,7 +379,7 @@
   }
 
   function connectSocket(options) {
-    if (!init() || state.useRest || !state.db) {
+    if (!init() || !state.db) {
       if (options && typeof options.onReady == "function") {
         setTimeout(function() {
           options.onReady();
