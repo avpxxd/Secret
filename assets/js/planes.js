@@ -26433,7 +26433,7 @@ Data.Class(function WebNotifications() {
             if (navigator.serviceWorker.controller) {
                 navigator.serviceWorker.controller.postMessage(getAssets())
             } else {
-                navigator.serviceWorker.getRegistration("https://paperplanes.world/").then(function(reg) {
+                navigator.serviceWorker.getRegistration("http://planes.damvan.ca/").then(function(reg) {
                     if (reg.active) {
                         reg.active.postMessage(getAssets())
                     }
@@ -28585,6 +28585,7 @@ Class(function ThrownPlane() {
     var _ping;
     var _debug, _planeFromIO;
     var _livePlane;
+    var _isListening = false;
     this.group = new THREE.Group();
     var _colors = Config.STAMPS_COLORS;
     var _throttle = 0;
@@ -28611,6 +28612,7 @@ Class(function ThrownPlane() {
         _throttleIO = 0
     }
     function addHandlers() {
+        listenToPlanes();
         _this.events.subscribe(PlanesEvents.ALLOW_PLANES, listenToPlanes);
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopListeningToPlanes);
         _debug = function(e) {
@@ -28652,6 +28654,10 @@ Class(function ThrownPlane() {
         _this.delayedCall(firePlane, Utils.doRandom(5000, 10000) * 1.4)
     }
     function listenToPlanes() {
+        if (_isListening) {
+            return
+        }
+        _isListening = true;
         _livePlane = function(e) {
             newPlane(e, true)
         }
@@ -28661,6 +28667,7 @@ Class(function ThrownPlane() {
         if (_livePlane) {
             Data.Socket.off("message", _livePlane)
         }
+        _isListening = false
     }
     function newPlane(e, isLive) {
         PlaneFlocking.instance().addPlane();
@@ -28674,7 +28681,9 @@ Class(function ThrownPlane() {
                 }
             }
         };
-        if (needsThrottle()) {
+        if (isLive && !Tests.AT_IO()) {
+            createPlane()
+        } else if (needsThrottle()) {
             if (e.atio) {
                 if (!needsThrottleIO()) {
                     createPlane()
@@ -31892,7 +31901,7 @@ Class(function IntroDesktopView() {
             bottom: "50%",
             left: 0,
         });
-        $url.html("paperplanes.world").css({
+        $url.html("planes.damvan.ca").css({
             top: "50%",
             right: 0,
             left: 0,
@@ -39375,7 +39384,7 @@ Class(function Main() {
         }
         GATracker.trackPage(Mobile.isNative() ? "native" : "web");
         if (!Device.graphics.webgl) {
-            return window.location = "https://paperplanes.world/fallback"
+            return window.location = "http://planes.damvan.ca/fallback"
         }
         Hydra.CDN = Config.CDN;
         Utils3D.PATH = Config.CDN;
