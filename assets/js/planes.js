@@ -27478,9 +27478,9 @@ function abbreviateRegion(region, country) {
         return normalized.toUpperCase()
     }
     if (countryCode == "ca" || countryCode == "us") {
-        return map[normalized] || titleCase(region)
+        return map[normalized] || region
     }
-    return titleCase(region)
+    return region
 }
 
 function formatLocationText(city, region, countryName) {
@@ -27541,12 +27541,11 @@ Data.Class(function User() {
         var region = data.region_code || data.region || address.state || address.region || address.county || "";
         var country = (data.country_code || data.country || address.country_code || "").toString().toLowerCase();
         var countryName = data.country_name || data.country || address.country || "";
+        countryName = (countryName || "").toString().trim();
         if (countryName && countryName.length === 2) {
             countryName = countryName.toUpperCase()
-        } else {
-            countryName = titleCase(countryName)
         }
-        city = titleCase(city) || "Planet Earth";
+        city = (city || "").toString().trim() || "Planet Earth";
         region = abbreviateRegion(region, country);
         var coords = data.coords || [data.latitude || 0, data.longitude || 0];
         var address = formatLocationText(city, region);
@@ -34415,15 +34414,8 @@ Class(function DetailInfoView(_data) {
             fontSize: 32,
             fontWeight: "bold",
         });
-        function capitalize(s) {
-            return s.toLowerCase().replace(/\b./g, function(a) {
-                return a.toUpperCase()
-            })
-        }
-        var place = _data.data.address.split(",")[0];
-        var state = _data.data.address.split(",")[1] || "";
-        var address = capitalize(place);
-        $text.html("Created " + _data.data.date + "<br />in " + address + state).css({
+        var locationText = _data.data.location || _data.data.address || formatLocationText(_data.data.city, _data.data.region, _data.data.country_name || _data.data.country);
+        $text.html("Created " + _data.data.date + "<br />in " + locationText).css({
             left: 0,
             right: 0,
             top: 75,
