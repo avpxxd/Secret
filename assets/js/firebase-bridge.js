@@ -2,6 +2,7 @@
   var state = {
     initialized: false,
     db: null,
+    useRest: false,
     socketRef: null,
     socketHandlers: [],
     liveHandlers: [],
@@ -20,23 +21,7 @@
     if (!hasConfig()) {
       return false;
     }
-    if (!window.firebase) {
-      return false;
-    }
-    if (!firebase.apps.length) {
-      firebase.initializeApp(window.FIREBASE_CONFIG);
-    }
-    state.db = firebase.database();
-    if (firebase.auth) {
-      state.authReady = firebase.auth().signInAnonymously().then(function() {
-        return true;
-      }).catch(function(error) {
-        console.warn("Firebase anonymous auth unavailable", error && error.message ? error.message : error);
-        return true;
-      });
-    } else {
-      state.authReady = Promise.resolve(true);
-    }
+    state.useRest = true;
     state.initialized = true;
     window.FirebasePlanesBridgeReady = true;
     return true;
@@ -45,6 +30,85 @@
   function ensureReady() {
     init();
     return state.authReady || Promise.resolve(true);
+  }
+
+  function databaseBaseUrl() {
+    var config = window.FIREBASE_CONFIG || {};
+    return (config.databaseURL || "").replace(/\/$/, "");
+  }
+
+  function restRequest(path, method, body) {
+    var url = databaseBaseUrl() + "/" + path + ".json";
+    var options = {
+      method: method || "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    };
+    if (body !== undefined) {
+      options.body = JSON.stringify(body);
+    }
+    return fetch(url, options).then(function(response) {
+      return response.json().then(function(data) {
+        if (!response.ok) {
+          throw new Error((data && data.error) || response.statusText || "Firebase REST request failed");
+        }
+        return data;
+      });
+    });
+  }
+
+  function restGetPlaneCount() {
+    return restRequest("meta/planeCount", "GET").then(function(metaCount) {
+      metaCount = metaCount || 0;
+      return restRequest("planes", "GET").then(function(value) {
+        value = value || {};
+        var actualCount = Object.keys(value).length;
+        var count = Math.max(metaCount, actualCount);
+        if (count !== metaCount) {
+          return restRequest("meta/planeCount", "PUT", count).then(function() {
+            return count;
+          });
+        }
+        return count;
+      });
+    }).catch(function() {
+      return 0;
+    });
+  }
+
+  function restSavePlane(data, id, isNew) {
+    var payload = clone(data);
+    payload.id = id;
+    payload.data = JSON.stringify(payload);
+    payload.updatedAt = Date.now();
+    if (!payload.createdAt) {
+      payload.createdAt = payload.updatedAt;
+    }
+    return restRequest("planes/" + id, "PUT", payload).then(function() {
+      var latestPayload = {
+        id: id,
+        pool: payload.pool || null,
+        updatedAt: payload.updatedAt,
+        createdAt: payload.createdAt
+      };
+      if (isNew) {
+        return restGetPlaneCount().then(function(count) {
+          return Promise.all([
+            restRequest("meta/latestPlane", "PUT", latestPayload),
+            restRequest("meta/planeCount", "PUT", count + 1)
+          ]).then(function() {
+            return { count: count + 1 };
+          });
+        });
+      }
+      return Promise.all([
+        restRequest("meta/latestPlane", "PUT", latestPayload),
+        restGetPlaneCount()
+      ]).then(function(results) {
+        return { count: results[1] || 0 };
+      });
+    });
   }
 
   function readLocalPlaneFallback() {
@@ -96,8 +160,11 @@
   }
 
   function getPlaneCount() {
-    if (!init() || !state.db) {
+    if (!init()) {
       return Promise.resolve(0);
+    }
+    if (state.useRest || !state.db) {
+      return restGetPlaneCount();
     }
     var ref = metaRef();
     var planes = planesRef();
@@ -124,8 +191,8 @@
     }
 
     return ensureReady().then(function() {
-      if (!state.db) {
-        return { count: 0 };
+      if (state.useRest || !state.db) {
+        return restSavePlane(data, id, isNew);
       }
       var payload = clone(data);
       payload.id = id;
@@ -177,6 +244,11 @@
       return Promise.resolve(null);
     }
     return ensureReady().then(function() {
+      if (state.useRest || !state.db) {
+        return restRequest("planes/" + id, "GET").catch(function() {
+          return null;
+        });
+      }
       var ref = planeRef(id);
       if (!ref) {
         return null;
@@ -192,6 +264,18 @@
       return Promise.resolve(null);
     }
     return ensureReady().then(function() {
+      if (state.useRest || !state.db) {
+        return restRequest("meta/latestPlane", "GET").then(function(latest) {
+          if (!latest || !latest.id) {
+            return null;
+          }
+          return restRequest("planes/" + latest.id, "GET").catch(function() {
+            return null;
+          });
+        }).catch(function() {
+          return null;
+        });
+      }
       var ref = planesRef();
       if (!ref) {
         return null;
@@ -212,6 +296,23 @@
       return Promise.resolve(readLocalPlaneFallback());
     }
     return ensureReady().then(function() {
+      if (state.useRest || !state.db) {
+        return restRequest("planes", "GET").then(function(value) {
+          value = value || {};
+          var keys = Object.keys(value).filter(function(key) {
+            return value[key] && value[key].pool == pool;
+          });
+          if (!keys.length) {
+            keys = Object.keys(value);
+          }
+          if (!keys.length) {
+            return readLocalPlaneFallback();
+          }
+          return value[keys[Math.floor(Math.random() * keys.length)]];
+        }).catch(function() {
+          return readLocalPlaneFallback();
+        });
+      }
       var ref = planesRef();
       if (!ref) {
         return readLocalPlaneFallback();
@@ -235,7 +336,7 @@
   }
 
   function connectSocket(options) {
-    if (!init()) {
+    if (!init() || state.useRest || !state.db) {
       if (options && typeof options.onReady == "function") {
         setTimeout(function() {
           options.onReady();
