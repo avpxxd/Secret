@@ -32005,7 +32005,7 @@ Class(function IntroDesktopView() {
             opacity: 0
         });
         $outerSpace.css({
-            opacity: 0
+            opacity: 1
         });
         $outerSpace.touchClick(null, sendOuterSpacePlane)
     }
