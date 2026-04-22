@@ -53,7 +53,16 @@
 
   function getPlaneCount() {
     return metaRef().once("value").then(function(snapshot) {
-      return snapshot.val() || 0;
+      var metaCount = snapshot.val() || 0;
+      return planesRef().once("value").then(function(planesSnapshot) {
+        var value = planesSnapshot.val() || {};
+        var actualCount = Object.keys(value).length;
+        var count = Math.max(metaCount, actualCount);
+        if (count !== metaCount) {
+          metaRef().set(count);
+        }
+        return count;
+      });
     });
   }
 
@@ -72,13 +81,17 @@
 
     var write = planeRef(id).set(payload);
     if (isNew) {
-      return Promise.all([write, incrementPlaneCount()]).then(function(result) {
-        return { count: result[1] };
+      return write.then(function() {
+        return getPlaneCount().then(function(count) {
+          return { count: count };
+        });
       });
     }
 
-    return Promise.all([write, getPlaneCount()]).then(function(result) {
-      return { count: result[1] };
+    return write.then(function() {
+      return getPlaneCount().then(function(count) {
+        return { count: count };
+      });
     });
   }
 
@@ -112,7 +125,14 @@
     return planesRef().orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
       var value = snapshot.val();
       if (!value) {
-        return null;
+        return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
+          var fallbackValue = fallbackSnapshot.val();
+          if (!fallbackValue) {
+            return null;
+          }
+          var fallbackKeys = Object.keys(fallbackValue);
+          return fallbackValue[fallbackKeys[0]];
+        });
       }
       var keys = Object.keys(value);
       return value[keys[Math.floor(Math.random() * keys.length)]];
