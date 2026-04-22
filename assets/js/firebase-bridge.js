@@ -48,13 +48,29 @@
     if (body !== undefined) {
       options.body = JSON.stringify(body);
     }
+    console.log("[PaperPlanes] RTDB request", method || "GET", path, body !== undefined ? body : null);
     return fetch(url, options).then(function(response) {
-      return response.json().then(function(data) {
+      return response.text().then(function(text) {
+        var data = null;
+        if (text) {
+          try {
+            data = JSON.parse(text);
+          } catch (error) {
+            data = text;
+          }
+        }
+        console.log("[PaperPlanes] RTDB response", method || "GET", path, response.status, data);
         if (!response.ok) {
           throw new Error((data && data.error) || response.statusText || "Firebase REST request failed");
         }
         return data;
+      }).catch(function(error) {
+        console.error("[PaperPlanes] RTDB response parse failed", method || "GET", path, error && error.message ? error.message : error);
+        throw error;
       });
+    }).catch(function(error) {
+      console.error("[PaperPlanes] RTDB request failed", method || "GET", path, error && error.message ? error.message : error);
+      throw error;
     });
   }
 
@@ -104,8 +120,8 @@
         return restGetPlaneCount().then(function(count) {
           return Promise.all([
             restRequest("meta/latestPlane", "PUT", latestPayload),
-            restRequest("meta/planeCount", "PUT", count + 1)
-            , restRequest("debug/planeCreates/" + id, "PUT", debugPayload)
+            restRequest("meta/planeCount", "PUT", count + 1),
+            restRequest("debug/planeCreates/" + id, "PUT", debugPayload)
           ]).then(function() {
             return { count: count + 1 };
           });
