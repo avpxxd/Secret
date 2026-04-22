@@ -25752,17 +25752,26 @@ Class(function PinchMechanism() {
 });
 Module(function DefaultPlane() {
     function getPlane() {
-        var location = Data.User.getLocation() || {};
+        var location = {};
+        var coords = [0, 0];
+        try {
+            location = Data.User.getLocation() || {};
+            coords = Data.User.getCoords() || coords
+        } catch (e) {}
         var address = location.city || "Planet Earth";
         if (location.region) {
             address += ", " + location.region.toUpperCase()
         }
         var country = (location.country || "").toUpperCase() || "US";
         var countryName = location.country_name || location.country || "";
+        var pool = "world";
+        try {
+            pool = Data.User.getPool(location.country, coords)
+        } catch (e) {}
         return {
             id: Utils.timestamp(),
             data: {
-                pool: Data.User.getPool(location.country, Data.User.getCoords()),
+                pool: pool,
                 date: "May 18, 2016",
                 address: address,
                 country: country,
@@ -25780,7 +25789,7 @@ Module(function DefaultPlane() {
                     address: address,
                     country: country,
                     country_name: countryName,
-                    coords: Data.User.getCoords()
+                    coords: coords
                 }]
             }
         }
@@ -27560,12 +27569,14 @@ Data.Class(function User() {
     }
     ;
     this.getCoords = function() {
-        return _data.coords || [0, 0]
+        var data = _data || {};
+        return data.coords || [0, 0]
     }
     ;
     this.getPool = function(country, coords) {
-        country = (country || _data.country || "").toLowerCase();
-        coords = coords || _data.coords || [0, 0];
+        var data = _data || {};
+        country = (country || data.country || "").toLowerCase();
+        coords = coords || data.coords || [0, 0];
         if (!country || country != "us") {
             return "world"
         } else {
