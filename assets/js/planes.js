@@ -27203,10 +27203,15 @@ Data.Class(function User() {
                 getAccurateGeo();
                 _this.ready = true
             } else {
-                XHR.get(Hydra.LOCAL ? "assets/data/_geo.json" : "/geo", function(data) {
+                XHR.get("assets/data/_geo.json", function(data) {
                     _this.data(data);
                     _this.ready = true
-                })
+                }).onError = function() {
+                    XHR.get("/geo", function(data) {
+                        _this.data(data);
+                        _this.ready = true
+                    })
+                }
             }
         }
     }
