@@ -26661,8 +26661,14 @@ Data.Class(function Planes() {
         Data.WebNotifications.subscribe();
         var subscriptionID = Data.User.getSubscriptionId();
         data.subscriptionId = subscriptionID || -1;
+        data.createdBy = subscriptionID || -1;
+        data.updatedBy = subscriptionID || -1;
         data.lastUpdated = Date.now();
+        data.createdAt = data.lastUpdated;
+        data.updatedAt = data.lastUpdated;
         data.client = Mobile.isNative() ? "app" : "web";
+        data.createdByClient = data.client;
+        data.updatedByClient = data.client;
         var handleData = function(e) {
             console.log("[PaperPlanes] Data.Planes.createPlane handleData", e && e.count);
             var store = {};
@@ -26730,6 +26736,11 @@ Data.Class(function Planes() {
         }
         _caughtPlane.data.lastUpdated = Date.now();
         _caughtPlane.data.pool = Data.User.getPool();
+        _caughtPlane.data.caughtBy = Data.User.getSubscriptionId() || -1;
+        _caughtPlane.data.caughtByClient = Mobile.isNative() ? "app" : "web";
+        _caughtPlane.data.updatedBy = _caughtPlane.data.caughtBy;
+        _caughtPlane.data.updatedByClient = _caughtPlane.data.caughtByClient;
+        _caughtPlane.data.caughtAt = _caughtPlane.data.lastUpdated;
         _caughtPlane.data.stamps.push(stampData);
         if (usesFirebaseBackend()) {
             FirebasePlanesBridge.savePlane(_caughtPlane.data, _caughtPlane.id, false).then(function(e) {
@@ -28903,7 +28914,7 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat = _this.delayedCall(showStat, 12000);
+        _timeoutStat = _this.delayedCall(showStat, 22000);
         _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 11000)
     }
     function addHandlers() {
@@ -29548,8 +29559,11 @@ Class(function MyPlanes() {
         _this.isDetail = true;
         _list.animateShiftOut();
         GATracker.trackEvent("my planes", "click", "open detail", 1);
-        _detail = _this.initClass(MyPlanesDetailView, e.data);
-        _this.delayedCall(_detail.animateIn, 100)
+        Data.Planes.refreshPlanes(function() {
+            var plane = Data.Planes.findPlaneByData(e.data) || e.data;
+            _detail = _this.initClass(MyPlanesDetailView, plane);
+            _this.delayedCall(_detail.animateIn, 100)
+        })
     }
     function closeDetail() {
         GATracker.trackEvent("my planes", "click", "close detail", 1);
@@ -34611,7 +34625,7 @@ Class(function DetailStatsView(_data) {
             top: "54%",
         });
         if (_data.data.stamps.length > 1) {
-            $label.html("Your plane has flown").css({
+            $label.html("Caught " + (_data.data.stamps.length - 1) + " time" + (_data.data.stamps.length - 1 == 1 ? "" : "s")).css({
                 left: 0,
                 right: 0,
                 top: 0,
@@ -34784,23 +34798,22 @@ Class(function MyPlanesList() {
         $this.show()
     }
     function updateList() {
-        if (Data.Planes.getCreatedPlanes().length <= _count) {
-            return
-        }
-        if (_dw) {
-            _dw.stop()
-        }
-        _items.forEach(function(item) {
-            item.destroy()
-        });
-        _items = [];
-        initData();
-        initList();
-        var text = Copy.MADE.replace("##", _data.length);
-        if (_data.length == 1) {
-            text = text.slice(0, -1)
-        }
-        $title.html(text)
+        Data.Planes.refreshPlanes(function() {
+            if (_dw) {
+                _dw.stop()
+            }
+            _items.forEach(function(item) {
+                item.destroy()
+            });
+            _items = [];
+            initData();
+            initList();
+            var text = Copy.MADE.replace("##", _data.length);
+            if (_data.length == 1) {
+                text = text.slice(0, -1)
+            }
+            $title.html(text)
+        })
     }
     this.animateOut = function(callback) {
         $title.tween({
