@@ -28642,7 +28642,7 @@ Class(function ThrownPlane() {
         }
         _isListening = true;
         _livePlane = function(e) {
-            newPlane(e, true)
+            newPlane(e && e.d ? e.d : e, true)
         }
         Data.Socket.on("message", _livePlane)
     }
@@ -31828,6 +31828,10 @@ Class(function IntroDesktopView() {
         $qr.size(180, 180).center().css({
             top: "50%",
             marginTop: -220,
+            backgroundSize: "contain",
+            backgroundRepeat: "no-repeat",
+            backgroundPosition: "center",
+            opacity: 1
         }).bg("assets/images/common/qr-code.png");
         $connect.html(Copy.CONNECT).css({
             right: 0,
@@ -31844,7 +31848,7 @@ Class(function IntroDesktopView() {
             opacity: 0
         });
         $qr.css({
-            opacity: 0
+            opacity: 1
         });
         $connect.css({
             opacity: 0
@@ -31860,13 +31864,6 @@ Class(function IntroDesktopView() {
             $start.tween({
                 opacity: 0
             }, 1000, "easeOutCubic", 3000, function() {})
-        });
-        $qr.tween({
-            opacity: 1
-        }, 1000, "easeOutCubic", 10500, function() {
-            $qr.tween({
-                opacity: 0
-            }, 1000, "easeOutCubic", 5000, function() {})
         });
         $connect.tween({
             opacity: 1
