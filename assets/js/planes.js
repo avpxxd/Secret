@@ -11300,7 +11300,7 @@ Class(function Copy() {
     this.CONFIRM_TEXT_BACK = "The plane is back<br />flying around the world<br />with ## others";
     this.MADE = "You’ve made<br />## planes";
     this.SIDESCREEN = "Join on<br />your phone at<br /><strong>planes.damvan.ca</strong>";
-    this.INFO_TEXT = ["This experience allows people to throw and catch virtual paper planes with one another<br/><br/>Visit <strong>planes.damvan.ca</strong> on your computer to throw planes<br/>into your screen", 'Made by some friends at <a href="http://google.com" target="_blank">Google</a>, <a href=http://activetheory.net target=_blank>Active Theory</a> and <a href=http://droga5.com target=_blank>Droga5</a>'];
+    this.INFO_TEXT = ["This experience allows people to throw and catch virtual paper planes with one another<br/><br/>Visit <strong>planes.damvan.ca</strong> on your computer to throw planes<br/>into your screen", 'Made by some friends at <a href="http://damvan.ca/" target="_blank">Damvan</a>'];
     this.INFO_GPS_1 = "Currently using IP for location.";
     this.INFO_GPS_2 = "Enable GPS for more accuracy.";
     this.THROWN_TEXT = ["Planes have just left", "Planes were just thrown from", "Planes are on their way from", "Planes just took off from", "Planes have just departed", ];
@@ -28634,24 +28634,7 @@ Class(function ThrownPlane() {
         ;
         if (Tests.AT_IO() || Config.BEAST) {
             __window.bind("keydown", _debug)
-        } else {
-            _this.delayedCall(firePlane, 10000 + Utils.doRandom(5000, 8000))
         }
-    }
-    function firePlane() {
-        var location = Config.LOCATIONS[Utils.doRandom(0, Config.LOCATIONS.length - 1)];
-        var coords = [location.coords.lat, location.coords.lng];
-        newPlane({
-            coords: coords,
-            color: _colors[Utils.doRandom(0, _colors.length - 1)],
-            scale: {
-                x: Utils.doRandom(50, 110) * 0.01,
-                z: Utils.doRandom(50, 100) * 0.01
-            },
-            atio: true,
-            location: location.location
-        });
-        _this.delayedCall(firePlane, Utils.doRandom(5000, 10000) * 1.4)
     }
     function listenToPlanes() {
         if (_isListening) {
@@ -28777,19 +28760,7 @@ Class(function Stats() {
     var _movement, _text, _ping, _realTimeLocation;
     var _timeoutSet, _timeoutStat, _timeoutStat2;
     var _stats = [];
-    var _statsPool = [];
     var _realTimeQueue = [];
-    if (Tests.AT_IO()) {
-        _stats = Config.IO_LOCATION_LIST
-    } else {
-        Config.LOCATIONS.forEach(function(location) {
-            for (var i = 0; i < location.priority; i++) {
-                _stats.push(location)
-            }
-        })
-    }
-    var _index = -1;
-    var _set = [];
     (function() {
         initHTML();
         initViews();
@@ -28808,45 +28779,13 @@ Class(function Stats() {
         _text = _this.initClass(StatsMeshText);
         _ping = _this.initClass(StatsPing)
     }
-    function populatePool() {
-        _stats.forEach(function(e, i) {
-            _statsPool.push(i)
-        })
-    }
-    function startSet() {
-        if (_stats.length == 0) {
-            _timeoutSet = _this.delayedCall(showStat, 2000);
+    function showStat() {
+        if (_realTimeQueue.length === 0) {
             return
         }
-        _index = -1;
-        _set = [];
-        if (_statsPool.length === 0) {
-            populatePool()
-        }
-        for (var i = 0; i < 3; i++) {
-            var statIndex = Tests.AT_IO() ? _statsPool.splice(0, 1) : _statsPool.splice(Utils.doRandom(0, _statsPool.length - 1), 1);
-            _set.push(_stats[statIndex]);
-            if (_statsPool.length === 0) {
-                populatePool()
-            }
-        }
-        showStat()
-    }
-    function showStat() {
-        var stat;
-        var isRealtime = _realTimeQueue.length > 0;
-        if (isRealtime) {
-            stat = _realTimeQueue.shift();
-        } else {
-            _index++;
-            if (_index == _set.length) {
-                _timeoutSet = _this.delayedCall(startSet, 20000);
-                return
-            }
-            stat = _set[_index]
-        }
+        var stat = _realTimeQueue.shift();
         _realTimeLocation = null;
-        var position = _movement.zoomToLocation(stat, _index === 0 && !isRealtime);
+        var position = _movement.zoomToLocation(stat, true);
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
@@ -28862,9 +28801,6 @@ Class(function Stats() {
         _text.animateOut();
         _realTimeQueue = [];
         _realTimeLocation = null;
-        if (_timeoutSet) {
-            clearTimeout(_timeoutSet)
-        }
         if (_timeoutStat) {
             clearTimeout(_timeoutStat)
         }
@@ -28875,9 +28811,6 @@ Class(function Stats() {
     function addRealtimeLocation(location) {
         _realTimeLocation = location;
         _realTimeQueue.unshift(location);
-        if (_timeoutSet) {
-            clearTimeout(_timeoutSet)
-        }
         if (_timeoutStat) {
             clearTimeout(_timeoutStat)
         }
@@ -28887,7 +28820,7 @@ Class(function Stats() {
         showStat()
     }
     this.start = function() {
-        _timeoutSet = _this.delayedCall(startSet, Tests.AT_IO() ? 60000 : 10000)
+        return
     }
 });
 Class(function StatsMovement() {
@@ -28987,14 +28920,9 @@ Class(function StatsMovement() {
         if (_flocking.object3D.rotation.y - _earth.object3D.rotation.y < -Math.PI) {
             _flocking.object3D.rotation.y += Math.PI * 2
         }
-        _flocking.object3D.rotation.x += (_earth.object3D.rotation.x - _flocking.object3D.rotation.x) * 0.01;
-        _flocking.object3D.rotation.y += (_earth.object3D.rotation.y - _flocking.object3D.rotation.y) * 0.01;
-        _flocking.object3D.rotation.z += (_earth.object3D.rotation.z - _flocking.object3D.rotation.z) * 0.01
     }
     this.zoomToLocation = function(stat, isFirst) {
-        if (_tweenZoom && _tweenZoom.stop) {
-            _tweenZoom.stop()
-        }
+        _tweenZoom && _tweenZoom.stop && _tweenZoom.stop();
         _this.isZoomed = true;
         var lat = stat.coords.lat;
         _positionIndex = lat > 30 ? 0 : lat > -10 ? 2 : 4;
