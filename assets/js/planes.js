@@ -27387,6 +27387,102 @@ Class(function SocketPipeSender(_type, _exp, _atIO) {
     ;
     this.event = function(data) {}
 });
+function abbreviateRegion(region, country) {
+    region = (region || "").toString().trim();
+    if (!region) {
+        return ""
+    }
+    var normalized = region.toLowerCase().replace(/\./g, "");
+    var map = {
+        alberta: "AB",
+        "british columbia": "BC",
+        manitoba: "MB",
+        "new brunswick": "NB",
+        "newfoundland and labrador": "NL",
+        "newfoundland": "NL",
+        "nova scotia": "NS",
+        ontario: "ON",
+        "prince edward island": "PE",
+        quebec: "QC",
+        saskatchewan: "SK",
+        yukon: "YT",
+        "northwest territories": "NT",
+        nunavut: "NU",
+        alabama: "AL",
+        alaska: "AK",
+        arizona: "AZ",
+        arkansas: "AR",
+        california: "CA",
+        colorado: "CO",
+        connecticut: "CT",
+        delaware: "DE",
+        florida: "FL",
+        georgia: "GA",
+        hawaii: "HI",
+        idaho: "ID",
+        illinois: "IL",
+        indiana: "IN",
+        iowa: "IA",
+        kansas: "KS",
+        kentucky: "KY",
+        louisiana: "LA",
+        maine: "ME",
+        maryland: "MD",
+        massachusetts: "MA",
+        michigan: "MI",
+        minnesota: "MN",
+        mississippi: "MS",
+        missouri: "MO",
+        montana: "MT",
+        nebraska: "NE",
+        nevada: "NV",
+        "new hampshire": "NH",
+        "new jersey": "NJ",
+        "new mexico": "NM",
+        "new york": "NY",
+        "north carolina": "NC",
+        "north dakota": "ND",
+        ohio: "OH",
+        oklahoma: "OK",
+        oregon: "OR",
+        pennsylvania: "PA",
+        "rhode island": "RI",
+        "south carolina": "SC",
+        "south dakota": "SD",
+        tennessee: "TN",
+        texas: "TX",
+        utah: "UT",
+        vermont: "VT",
+        virginia: "VA",
+        washington: "WA",
+        "west virginia": "WV",
+        wisconsin: "WI",
+        wyoming: "WY",
+        "district of columbia": "DC"
+    };
+    if (normalized.length <= 3) {
+        return normalized.toUpperCase()
+    }
+    return map[normalized] || region.toUpperCase()
+}
+
+function formatLocationText(city, region, countryName) {
+    var parts = [];
+    city = (city || "").toString().trim();
+    region = abbreviateRegion(region, countryName);
+    countryName = (countryName || "").toString().trim();
+    if (city) {
+        parts.push(city)
+    }
+    if (region) {
+        parts.push(region)
+    }
+    if (countryName) {
+        parts.push(countryName)
+    }
+    return parts.join(", ")
+}
+
 Data.Class(function User() {
     Inherit(this, Model);
     var _this = this;
@@ -27434,12 +27530,9 @@ Data.Class(function User() {
             countryName = titleCase(countryName)
         }
         city = titleCase(city) || "Planet Earth";
-        region = (region || "").toString().toLowerCase();
+        region = abbreviateRegion(region, country);
         var coords = data.coords || [data.latitude || 0, data.longitude || 0];
-        var address = city;
-        if (region && city.toLowerCase() !== region) {
-            address += ", " + region.toUpperCase()
-        }
+        var address = formatLocationText(city, region);
         return {
             region: region,
             city: city,
@@ -27574,7 +27667,7 @@ Data.Class(function User() {
             _data.city = _data.region || _data.country_name || "Planet Earth"
         }
         if (!_data.address || _data.address == "") {
-            _data.address = _data.city + (_data.region ? ", " + _data.region.toUpperCase() : "")
+            _data.address = formatLocationText(_data.city, _data.region)
         }
     }
     function reverseGeocode(lat, lng) {
@@ -36671,15 +36764,16 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
         var stampLocation = Data.User.getLocation();
         var coords = PlaneStampTexture.DATA.coords;
         var color = PlaneStampTexture.DATA.color;
+        var region = stampLocation.region || PlaneStampTexture.DATA.region || "";
         var scale = {
             x: _plane.mesh.scale.x,
             z: _plane.mesh.scale.z
         };
-        var address = stampLocation.address || PlaneStampTexture.DATA.address || PlaneStampTexture.DATA.city || "Planet Earth";
-        var city = stampLocation.city || address;
+        var city = stampLocation.city || PlaneStampTexture.DATA.city || stampLocation.address || PlaneStampTexture.DATA.address || "Planet Earth";
+        var address = formatLocationText(city, region);
         var country = stampLocation.country || PlaneStampTexture.DATA.country || "";
         var countryName = stampLocation.country_name || PlaneStampTexture.DATA.country_name || country;
-        var location = address + (countryName ? ", " + countryName : "");
+        var location = formatLocationText(city, region, countryName);
         Data.Planes.throwPlane({
             id: Utils.timestamp(),
             coords: coords,
@@ -36688,6 +36782,7 @@ Class(function PlaneThrow(_plane, _animation, _shadow, _isRethrow) {
             location: location,
             address: address,
             city: city,
+            region: region,
             country: country,
             country_name: countryName
         }, _isRethrow);
@@ -36882,7 +36977,8 @@ Class(function PlaneStampTexture() {
         var color = _colors[colorIndex];
         var rotation = Utils.doRandom(-30, 30);
         var location = Data.User.getLocation();
-        var address = location.address || location.city || "Planet Earth";
+        var city = location.city || location.address || "Planet Earth";
+        var address = formatLocationText(city, location.region);
         var date = DateUtil.getDate();
         GATracker.trackEvent("plane", "stamp", "plane stamp", 1);
         var country = (location.country || "").toUpperCase();
@@ -36896,7 +36992,7 @@ Class(function PlaneStampTexture() {
             country = "AUS"
         }
         var countryName = location.country_name || country;
-        var fullLocation = address + (countryName ? ", " + countryName : "");
+        var fullLocation = formatLocationText(city, location.region, countryName);
         PlaneStampTexture.DATA = {
             position: {
                 x: x,
@@ -36909,6 +37005,8 @@ Class(function PlaneStampTexture() {
             date: date.numeric,
             address: address,
             location: fullLocation,
+            city: city,
+            region: location.region || "",
             country: country,
             country_name: countryName,
             coords: Data.User.getCoords(),
