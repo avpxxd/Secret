@@ -7,7 +7,8 @@
     socketRef: null,
     socketHandlers: [],
     liveHandlers: [],
-    authReady: null
+    authReady: null,
+    lastSelectedPlaneId: null
   };
 
   function hasConfig() {
@@ -427,20 +428,37 @@
     if (!init()) {
       return Promise.resolve(readLocalPlaneFallback());
     }
+    function choosePlaneFromValue(value) {
+      value = value || {};
+      var keys = Object.keys(value).filter(function(key) {
+        return value[key] && value[key].pool == pool;
+      });
+      if (!keys.length) {
+        keys = Object.keys(value);
+      }
+      if (!keys.length) {
+        return null;
+      }
+      if (keys.length > 1 && state.lastSelectedPlaneId) {
+        var filteredKeys = keys.filter(function(key) {
+          return key !== state.lastSelectedPlaneId;
+        });
+        if (filteredKeys.length) {
+          keys = filteredKeys;
+        }
+      }
+      var selectedKey = keys[Math.floor(Math.random() * keys.length)];
+      state.lastSelectedPlaneId = selectedKey;
+      return value[selectedKey];
+    }
     return ensureReady().then(function() {
       if (state.useRest || !state.db) {
         return restRequest("planes", "GET").then(function(value) {
-          value = value || {};
-          var keys = Object.keys(value).filter(function(key) {
-            return value[key] && value[key].pool == pool;
-          });
-          if (!keys.length) {
-            keys = Object.keys(value);
-          }
-          if (!keys.length) {
+          var plane = choosePlaneFromValue(value);
+          if (!plane) {
             return readLocalPlaneFallback();
           }
-          return value[keys[Math.floor(Math.random() * keys.length)]];
+          return plane;
         }).catch(function() {
           return readLocalPlaneFallback();
         });
@@ -454,15 +472,18 @@
         if (!value) {
           return ref.orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
             var fallbackValue = fallbackSnapshot.val();
-            if (fallbackValue) {
-              var fallbackKeys = Object.keys(fallbackValue);
-              return fallbackValue[fallbackKeys[0]];
+            var fallbackPlane = choosePlaneFromValue(fallbackValue);
+            if (fallbackPlane) {
+              return fallbackPlane;
             }
             return readLocalPlaneFallback();
           });
         }
-        var keys = Object.keys(value);
-        return value[keys[Math.floor(Math.random() * keys.length)]];
+        var plane = choosePlaneFromValue(value);
+        if (plane) {
+          return plane;
+        }
+        return readLocalPlaneFallback();
       });
     });
   }
