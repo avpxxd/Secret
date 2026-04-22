@@ -9455,7 +9455,7 @@ Class(function Thread(_class) {
             var splitChar = window._MINIFIED_ ? "=" : " ";
             while (code.strpos("this")) {
                 var split = code.slice(code.indexOf("this."));
-                var name = split.split("this.")[1].split(splitChar)[0];
+                var name = split.split("this.")[1].split(splitChar)[0].trim();
                 code = code.replace("this", "self");
                 createMethod(name)
             }
