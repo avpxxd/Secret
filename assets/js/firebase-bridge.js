@@ -78,6 +78,10 @@
     return state.db.ref("meta/planeCount");
   }
 
+  function latestPlaneRef() {
+    return state.db.ref("meta/latestPlane");
+  }
+
   function incrementPlaneCount() {
     return metaRef().transaction(function(current) {
       return (current || 0) + 1;
@@ -118,8 +122,16 @@
       var write = planeRef(id).set(payload);
       if (isNew) {
         return write.then(function() {
-          return getPlaneCount().then(function(count) {
-            return { count: count };
+          return Promise.all([
+            incrementPlaneCount(),
+            latestPlaneRef().set({
+              id: id,
+              pool: payload.pool || null,
+              updatedAt: payload.updatedAt,
+              createdAt: payload.createdAt
+            })
+          ]).then(function(results) {
+            return { count: results[0] || 0 };
           });
         }).catch(function(error) {
           console.error("Firebase plane create failed", error);
@@ -128,6 +140,12 @@
       }
 
       return write.then(function() {
+        latestPlaneRef().set({
+          id: id,
+          pool: payload.pool || null,
+          updatedAt: payload.updatedAt,
+          createdAt: payload.createdAt
+        });
         return getPlaneCount().then(function(count) {
           return { count: count };
         });
