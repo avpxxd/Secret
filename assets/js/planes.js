@@ -27481,22 +27481,16 @@ Data.Class(function User() {
             coords: [0, 0],
             ip: ""
         });
+        function isLegacyLosAngelesGeo(data) {
+            data = normalizeGeo(data);
+            return data.city.toLowerCase() == "los angeles" && data.region == "ca" && (data.country == "us" || data.country == "")
+        }
         function seedFallbackGeo() {
             var stored = Storage.get("accurate_geo");
-            if (stored) {
+            if (stored && !isLegacyLosAngelesGeo(stored)) {
                 return normalizeGeo(stored)
             }
-            var seed = clearGeo;
-            try {
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", "assets/data/_geo.json", false);
-                xhr.send(null);
-                if (xhr.status >= 200 && xhr.status < 300 && xhr.responseText) {
-                    seed = normalizeGeo(JSON.parse(xhr.responseText));
-                    Storage.set("accurate_geo", seed)
-                }
-            } catch (e) {}
-            return seed
+            return clearGeo
         }
         _data = seedFallbackGeo();
         var applyGeo = function(data) {
@@ -27526,22 +27520,14 @@ Data.Class(function User() {
                         ip: data.ip || ""
                     })
                 } catch (e) {
-                    XHR.get("assets/data/_geo.json", function(fallbackData) {
-                        applyGeo(fallbackData)
-                    }).onError = function() {
-                        _data = seedFallbackGeo();
-                        checkEmpty();
-                        Storage.set("accurate_geo", _data)
-                    }
-                }
-            }).onError = function() {
-                XHR.get("assets/data/_geo.json", function(fallbackData) {
-                    applyGeo(fallbackData)
-                }).onError = function() {
                     _data = seedFallbackGeo();
                     checkEmpty();
                     Storage.set("accurate_geo", _data)
                 }
+            }).onError = function() {
+                _data = seedFallbackGeo();
+                checkEmpty();
+                Storage.set("accurate_geo", _data)
             }
         };
         if (navigator.geolocation) {
