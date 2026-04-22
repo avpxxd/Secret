@@ -27376,7 +27376,14 @@ Class(function SocketPipeSender(_type, _exp, _atIO) {
 Data.Class(function User() {
     Inherit(this, Model);
     var _this = this;
-    var _data;
+    var _data = {
+        region: "",
+        city: "",
+        country: "",
+        country_name: "",
+        coords: [0, 0],
+        ip: ""
+    };
     var _subscriptionId;
     (function() {
         if (Mobile.isNative()) {
@@ -27412,12 +27419,12 @@ Data.Class(function User() {
         })
     }
     function getAccurateGeo() {
-        XHR.get("https://ipwho.is/", function(data) {
+        XHR.get("https://ipapi.co/json/", function(data) {
             try {
                 if (typeof data == "string") {
                     data = JSON.parse(data)
                 }
-                if (!data || data.success === false) {
+                if (!data || data.error) {
                     throw new Error("IP lookup failed")
                 }
                 _data = {
@@ -27506,12 +27513,12 @@ Data.Class(function User() {
         })
     }
     this.getLocation = function() {
-        var data = Storage.get("accurate_geo") || _data;
+        var data = Storage.get("accurate_geo") || _data || {};
         return {
-            country: data.country,
-            region: data.region,
-            city: data.city,
-            country_name: data.country_name
+            country: data.country || "",
+            region: data.region || "",
+            city: data.city || "",
+            country_name: data.country_name || ""
         }
     }
     ;
@@ -27520,13 +27527,13 @@ Data.Class(function User() {
     }
     ;
     this.getCoords = function() {
-        return _data.coords
+        return _data.coords || [0, 0]
     }
     ;
     this.getPool = function(country, coords) {
-        country = country || _data.country;
-        coords = coords || _data.coords;
-        if (country.toLowerCase() != "us") {
+        country = (country || _data.country || "").toLowerCase();
+        coords = coords || _data.coords || [0, 0];
+        if (!country || country != "us") {
             return "world"
         } else {
             return coords[1] < -94.8558 ? "west" : "east"
