@@ -11303,6 +11303,8 @@ Class(function Copy() {
     this.INFO_TEXT = ["This experience allows people to throw and catch virtual paper planes with one another<br/><br/>Visit <strong>planes.damvan.ca</strong> on your computer to throw planes<br/>into your screen", 'Made by some friends at <a href="http://damvan.ca/" target="_blank">Damvan</a>'];
     this.INFO_GPS_1 = "Currently using IP for location.";
     this.INFO_GPS_2 = "Enable GPS for more accuracy.";
+    this.LOCATION_DENIED_TITLE = "Location needed";
+    this.LOCATION_DENIED_SUB = "Please allow location access and reload so we can show the right town, province, and country.";
     this.THROWN_TEXT = ["Planes have just left", "Planes were just thrown from", "Planes are on their way from", "Planes just took off from", "Planes have just departed", ];
     this.READY = "Ready for takeoff?";
     this.CONNECT = "Join on your phone at";
@@ -27641,7 +27643,14 @@ Data.Class(function User() {
                 }).onError = function() {
                     loadIpGeo()
                 }
-            }, function() {
+            }, function(error) {
+                if (error && (error.code == error.PERMISSION_DENIED || error.code == 1)) {
+                    window.LOCATION_DENIED = true;
+                    if (window.Blocker && Blocker.instance) {
+                        Blocker.instance("location")
+                    }
+                    return
+                }
                 loadIpGeo()
             }, {
                 enableHighAccuracy: true,
@@ -28017,6 +28026,7 @@ Class(function Blocker() {
     var _this = this;
     var $container, $logo, $subCopy;
     var _view, _earth, _title, _loader;
+    var _reason = arguments[0] || "";
     (function() {
         initContainer();
         initLoader()
@@ -28045,7 +28055,11 @@ Class(function Blocker() {
         _earth.object3D.position.y = Mobile.phone ? -200 : -180;
         _earth.object3D.position.z = -650;
         var titleCopy = Mobile.phone ? Copy.INTRO : Copy.INTRO_DESKTOP;
-        if (Hydra.HASH.strpos("after")) {
+        var subCopy = Hydra.HASH.strpos("after") ? Copy.AFTER_DESKTOP_SUB : Copy.BLOCK_SUB;
+        if (_reason == "location") {
+            titleCopy = Copy.LOCATION_DENIED_TITLE;
+            subCopy = Copy.LOCATION_DENIED_SUB
+        } else if (Hydra.HASH.strpos("after")) {
             titleCopy = Mobile.phone ? Copy.AFTER : Copy.AFTER_DESKTOP
         }
         _title = _this.initClass(UITitle, titleCopy);
@@ -28062,7 +28076,7 @@ Class(function Blocker() {
             marginTop: 20,
             textAlign: "center"
         }).setZ(10);
-        $subCopy.html(Hydra.HASH.strpos("after") ? Copy.AFTER_DESKTOP_SUB : Copy.BLOCK_SUB);
+        $subCopy.html(subCopy);
         Render.start(loop);
         _this.delayedCall(animateIn, 500)
     }
@@ -39452,6 +39466,10 @@ Class(function Main() {
         ;
         setupSocket();
         setupNotifications();
+        if (window.LOCATION_DENIED) {
+            Blocker.instance("location");
+            return
+        }
         if (Hydra.HASH.strpos("playground")) {
             AssetLoader.loadAllAssets(function() {
                 setTimeout(function() {
