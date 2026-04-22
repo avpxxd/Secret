@@ -28914,8 +28914,8 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat = _this.delayedCall(showStat, 57000);
-        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 11000)
+        _timeoutStat = _this.delayedCall(showStat, 100000);
+        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 10000)
     }
     function addHandlers() {
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopStats);
