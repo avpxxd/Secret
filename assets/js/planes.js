@@ -27481,8 +27481,7 @@ Data.Class(function User() {
             coords: [0, 0],
             ip: ""
         });
-        _data = clearGeo;
-        Storage.set("accurate_geo", null);
+        _data = normalizeGeo(Storage.get("accurate_geo") || clearGeo);
         var applyGeo = function(data) {
             data = normalizeGeo(data);
             if (!data || (!data.country && !data.city)) {
@@ -27604,7 +27603,7 @@ Data.Class(function User() {
     }
     ;
     this.getCoords = function() {
-        var data = _data || {};
+        var data = normalizeGeo(Storage.get("accurate_geo") || _data || {});
         return data.coords || [0, 0]
     }
     ;
