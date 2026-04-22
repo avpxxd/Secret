@@ -62,6 +62,33 @@ This starts:
 
 When the page is opened from `localhost`, the client automatically uses the local backend instead of the legacy socketnetwork endpoints.
 
+If you are testing from a phone on the same Wi‑Fi network, open the site with your computer's LAN IP instead of `localhost` so both the frontend and backend resolve to the same machine.
+
+---
+
+## Firebase Production Setup
+
+The GitHub Pages build now looks for a Firebase Realtime Database config in `assets/js/firebase-config.js`.
+
+1. Create a Firebase project and enable Realtime Database.
+2. Replace the placeholder values in `assets/js/firebase-config.js` with your project config.
+3. Reload the GitHub Pages site — the client will use Firebase for plane storage and live updates when the config is present.
+
+The Firebase bridge stores plane records under `planes/`, the plane count under `meta/planeCount`, visitor presence under `users/`, connection info under `connections/`, and live socket-style events under `live/`.
+
+For quick testing, use these RTDB rules:
+
+```json
+{
+	"rules": {
+		".read": true,
+		".write": true
+	}
+}
+```
+
+Once you’re happy with the flow, tighten the rules and consider Anonymous Auth if you want per-visitor identifiers without a sign-in screen.
+
 ### Alternative: Python (no install)
 
 ```bash

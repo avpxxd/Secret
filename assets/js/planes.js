@@ -10313,7 +10313,12 @@ Class(function Config() {
         return ""
     }
     )();
-    this.APP_ENGINE = "https://at-socketnetwork.appspot.com";
+    this.APP_ENGINE = (function() {
+        var hostname = location.hostname || "";
+        var localHost = hostname == "localhost" || hostname == "127.0.0.1" || hostname == "[::1]" || hostname.indexOf("local") > -1 || hostname.indexOf(".local") > -1 || hostname.indexOf("github.io") == -1 && (hostname.indexOf("10.") == 0 || hostname.indexOf("192.168.") == 0 || hostname.indexOf("172.") == 0);
+        return localHost ? location.protocol + "//" + hostname + ":3001" : "https://at-socketnetwork.appspot.com"
+    }
+    )();
     this.STAMPS_COLORS = ["#D32F2F", "#C2185B", "#7B1FA2", "#303F9F", "#1976D2", "#0097A7", "#00796B", "#689F38", "#AFB42B", "#dfa410", "#F57C00", "#E64A19", "#455A64"];
     this.LOCALSTORAGE_KEY = "20160920";
     this.BEAST = Device.graphics.webgl.gpu && Device.graphics.webgl.gpu.strpos("titan");
@@ -26524,6 +26529,26 @@ Data.Class(function Planes() {
                 }
                 return
             }
+            if (usesFirebaseBackend()) {
+                FirebasePlanesBridge.getPlane(obj.id).then(function(e) {
+                    if (!e || !e.data) {
+                        _myPlanes.push(obj);
+                        console.log("unsuccessful", obj.id);
+                        load();
+                        return
+                    }
+                    var plane = e;
+                    plane.data = JSON.parse(plane.data);
+                    plane.number = obj.number;
+                    myPlanes.push(plane);
+                    load()
+                }).catch(function() {
+                    _myPlanes.push(obj);
+                    console.log("unsuccessful", obj.id);
+                    load()
+                });
+                return
+            }
             var xhr = XHR.get(Config.APP_ENGINE + "/getData", {
                 type: "planes",
                 id: obj.id
@@ -26624,11 +26649,19 @@ Data.Class(function Planes() {
             }
         };
         if (Mobile.System.CONNECTIVITY) {
-            XHR.post(Config.APP_ENGINE + "/setData", {
-                type: "planes",
-                data: JSON.stringify(data),
-                id: id
-            }, handleData)
+            if (usesFirebaseBackend()) {
+                FirebasePlanesBridge.savePlane(data, id, true).then(handleData).catch(function() {
+                    handleData({
+                        count: _this.count || 0
+                    })
+                })
+            } else {
+                XHR.post(Config.APP_ENGINE + "/setData", {
+                    type: "planes",
+                    data: JSON.stringify(data),
+                    id: id
+                }, handleData)
+            }
         } else {
             var count = Storage.get("lastCount") || 0;
             handleData({
@@ -26659,15 +26692,26 @@ Data.Class(function Planes() {
         _caughtPlane.data.lastUpdated = Date.now();
         _caughtPlane.data.pool = Data.User.getPool();
         _caughtPlane.data.stamps.push(stampData);
-        XHR.post(Config.APP_ENGINE + "/setData", {
-            type: "planes",
-            data: JSON.stringify(_caughtPlane.data),
-            id: _caughtPlane.id
-        }, function(e) {
-            _this.count = e.count + 1;
-            _caughtPlane = null;
-            callback()
-        })
+        if (usesFirebaseBackend()) {
+            FirebasePlanesBridge.savePlane(_caughtPlane.data, _caughtPlane.id, false).then(function(e) {
+                _this.count = e.count + 1;
+                _caughtPlane = null;
+                callback()
+            }).catch(function() {
+                _caughtPlane = null;
+                callback()
+            })
+        } else {
+            XHR.post(Config.APP_ENGINE + "/setData", {
+                type: "planes",
+                data: JSON.stringify(_caughtPlane.data),
+                id: _caughtPlane.id
+            }, function(e) {
+                _this.count = e.count + 1;
+                _caughtPlane = null;
+                callback()
+            })
+        }
     }
     ;
     this.refreshPlanes = function(callback) {
@@ -26681,23 +26725,44 @@ Data.Class(function Planes() {
     this.getLatestPlane = function(callback) {
         if (_myPlanes && _myPlanes.length > 0) {
             var obj = _myPlanes[0];
-            var xhr = XHR.get(Config.APP_ENGINE + "/getData", {
-                type: "planes",
-                id: obj.id
-            }, function(e) {
-                if (!e.data) {
-                    console.log("unsuccessful", obj.id);
+            if (usesFirebaseBackend()) {
+                FirebasePlanesBridge.getPlane(obj.id).then(function(e) {
+                    if (!e || !e.data) {
+                        console.log("unsuccessful", obj.id);
+                        callback({
+                            success: false
+                        });
+                        return
+                    }
+                    var plane = e;
+                    plane.data = JSON.parse(plane.data);
+                    plane.number = obj.number;
+                    _myPlanes[0] = plane;
+                    callback(plane)
+                }).catch(function() {
                     callback({
                         success: false
-                    });
-                    return
-                }
-                var plane = e;
-                plane.data = JSON.parse(plane.data);
-                plane.number = obj.number;
-                _myPlanes[0] = plane;
-                callback(plane)
-            })
+                    })
+                })
+            } else {
+                var xhr = XHR.get(Config.APP_ENGINE + "/getData", {
+                    type: "planes",
+                    id: obj.id
+                }, function(e) {
+                    if (!e.data) {
+                        console.log("unsuccessful", obj.id);
+                        callback({
+                            success: false
+                        });
+                        return
+                    }
+                    var plane = e;
+                    plane.data = JSON.parse(plane.data);
+                    plane.number = obj.number;
+                    _myPlanes[0] = plane;
+                    callback(plane)
+                })
+            }
         }
         return null
     }
@@ -26719,18 +26784,36 @@ Data.Class(function Planes() {
             }
         }
         )();
-        XHR.get(Config.APP_ENGINE + "/select", {
-            pool: lookupPool
-        }, function(e) {
-            if (e.fail || e.pool == "nopool") {
+        if (usesFirebaseBackend()) {
+            FirebasePlanesBridge.selectPlane(lookupPool).then(function(e) {
+                if (!e || !e.data) {
+                    callback(_defaultPlane.data);
+                    _caughtPlane = null;
+                    return
+                }
+                _caughtPlane = {};
+                _caughtPlane.id = e.id;
+                _caughtPlane.data = JSON.parse(e.data);
+                callback(_caughtPlane.data)
+            }).catch(function() {
                 callback(_defaultPlane.data);
-                _caughtPlane = null;
-                return
-            }
-            _caughtPlane = {};
-            _caughtPlane.data = e;
-            callback(_caughtPlane.data)
-        })
+                _caughtPlane = null
+            })
+        } else {
+            XHR.get(Config.APP_ENGINE + "/select", {
+                pool: lookupPool
+            }, function(e) {
+                if (e.fail || e.pool == "nopool") {
+                    callback(_defaultPlane.data);
+                    _caughtPlane = null;
+                    return
+                }
+                _caughtPlane = {};
+                _caughtPlane.id = e.id;
+                _caughtPlane.data = e;
+                callback(_caughtPlane.data)
+            })
+        }
     }
     ;
     this.findPlaneByData = function(data) {
@@ -26884,7 +26967,8 @@ Data.Class(function Socket() {
     }
 });
 function isLocalSocketHost() {
-    return location.hostname == "localhost" || location.hostname == "127.0.0.1" || location.hostname == "[::1]"
+    var hostname = location.hostname || "";
+    return hostname == "localhost" || hostname == "127.0.0.1" || hostname == "[::1]" || hostname.indexOf("local") > -1 || hostname.indexOf(".local") > -1 || hostname.indexOf("github.io") == -1 && (hostname.indexOf("10.") == 0 || hostname.indexOf("192.168.") == 0 || hostname.indexOf("172.") == 0)
 }
 function socketProtocol() {
     return isLocalSocketHost() ? "http://" : "https://"
@@ -26894,6 +26978,9 @@ function socketServerHost() {
 }
 function activeServersURL() {
     return isLocalSocketHost() ? socketProtocol() + socketServerHost() + ":3001/active_servers.json?" + Utils.timestamp() : "https://storage.googleapis.com/at-socketnetwork/assets/data/active_servers.json?" + Utils.timestamp()
+}
+function usesFirebaseBackend() {
+    return !!(window.FirebasePlanesBridge && FirebasePlanesBridge.isAvailable && FirebasePlanesBridge.isAvailable() && !isLocalSocketHost())
 }
 Module(function SocketConfig() {
     this.exports = {
@@ -27247,7 +27334,7 @@ Data.Class(function User() {
                     _this.data(data);
                     _this.ready = true
                 }).onError = function() {
-                    XHR.get("/geo", function(data) {
+                    XHR.get("assets/data/_geo.json", function(data) {
                         _this.data(data);
                         _this.ready = true
                     })
@@ -29359,7 +29446,7 @@ Class(function LoaderMobile() {
         if (Mobile.isNative()) {
             if (Mobile.System.CONNECTIVITY) {
                 _loader.add(1);
-                XHR.get(Config.APP_ENGINE + "/geo", function(e) {
+                XHR.get("assets/data/_geo.json", function(e) {
                     Data.User.data(e);
                     _loader.trigger(1)
                 })
@@ -32200,6 +32287,19 @@ Class(function DOFPass(_nuke, _scene, _camera, _renderer) {
     }
     )();
     function initRT() {
+        if (usesFirebaseBackend()) {
+            _type = "firebase";
+            _io = true;
+            _pipe = FirebasePlanesBridge.connectSocket({
+                type: _type,
+                experience: _exp,
+                onMessage: receiveData,
+                onEvent: receiveEvent,
+                onSide: sideMessage,
+                onReady: pipeReady
+            });
+            return
+        }
         if (_rt) {
             _rt.dispose()
         }

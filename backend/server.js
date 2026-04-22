@@ -1,6 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const { Server } = require('socket.io');
 
 const API_PORT = Number(process.env.PORT || 3001);
@@ -15,6 +17,11 @@ const users = new Map();
 const liveEvents = [];
 const connections = new Map();
 const servers = [];
+const planeRecords = new Map();
+const planeOrder = [];
+
+const geoPath = path.join(__dirname, '..', 'assets', 'data', '_geo.json');
+const geoData = JSON.parse(fs.readFileSync(geoPath, 'utf8'));
 
 function now() {
   return new Date().toISOString();
@@ -71,6 +78,80 @@ function addLiveEvent(kind, payload, meta) {
     liveEvents.shift();
   }
   return event;
+}
+
+function planeOwnerKey(data) {
+  if (!data || typeof data !== 'object') {
+    return 'global';
+  }
+  if (data.subscriptionId !== undefined && data.subscriptionId !== null && data.subscriptionId !== -1) {
+    return `subscription:${data.subscriptionId}`;
+  }
+  if (data.client) {
+    return `client:${data.client}`;
+  }
+  if (data.pool) {
+    return `pool:${data.pool}`;
+  }
+  return 'global';
+}
+
+function storedPlaneCount(ownerKey) {
+  let count = 0;
+  for (const plane of planeRecords.values()) {
+    if (plane.ownerKey === ownerKey) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+function serializePlaneRecord(record) {
+  return {
+    id: record.id,
+    type: 'planes',
+    data: typeof record.data === 'string' ? record.data : JSON.stringify(record.data),
+    count: record.count,
+    pool: record.pool,
+    subscriptionId: record.subscriptionId,
+    lastUpdated: record.lastUpdated,
+    client: record.client
+  };
+}
+
+function upsertPlaneRecord(payload) {
+  const id = payload.id || payload.__saveId || `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const data = typeof payload.data === 'string' ? JSON.parse(payload.data) : (payload.data || payload);
+  const ownerKey = planeOwnerKey(data);
+  const count = storedPlaneCount(ownerKey) + (planeRecords.has(id) ? 0 : 1);
+  const record = {
+    id,
+    ownerKey,
+    data,
+    count,
+    pool: data.pool || payload.pool || 'world',
+    subscriptionId: data.subscriptionId !== undefined ? data.subscriptionId : payload.subscriptionId,
+    lastUpdated: data.lastUpdated || payload.lastUpdated || Date.now(),
+    client: data.client || payload.client || 'web'
+  };
+  planeRecords.set(id, record);
+  if (!planeOrder.includes(id)) {
+    planeOrder.push(id);
+  }
+  return record;
+}
+
+function findPlaneByPool(pool) {
+  const matches = [];
+  for (const record of planeRecords.values()) {
+    if (!pool || pool === 'world' || record.pool === pool || (pool === 'east' && record.pool === 'east') || (pool === 'west' && record.pool === 'west')) {
+      matches.push(record);
+    }
+  }
+  if (!matches.length) {
+    return null;
+  }
+  return matches[matches.length > 1 ? Math.floor(Math.random() * matches.length) : 0];
 }
 
 function broadcast(eventName, payload, excludeSocket) {
@@ -220,6 +301,39 @@ app.get('/health', (req, res) => {
     sockets: SOCKET_PORTS.length,
     users: users.size,
     liveEvents: liveEvents.length
+  });
+});
+
+app.get('/geo', (req, res) => {
+  res.json(geoData);
+});
+
+app.get('/select', (req, res) => {
+  const pool = req.query.pool || 'world';
+  const plane = findPlaneByPool(pool);
+  if (!plane) {
+    res.json({ fail: true, pool: 'nopool' });
+    return;
+  }
+  res.json(serializePlaneRecord(plane));
+});
+
+app.get('/getData', (req, res) => {
+  const id = req.query.id;
+  if (!id || !planeRecords.has(id)) {
+    res.json({ fail: true, data: null });
+    return;
+  }
+  res.json(serializePlaneRecord(planeRecords.get(id)));
+});
+
+app.post('/setData', (req, res) => {
+  const payload = req.body || {};
+  const record = upsertPlaneRecord(payload);
+  res.json({
+    ok: true,
+    id: record.id,
+    count: record.count
   });
 });
 
