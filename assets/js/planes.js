@@ -25758,10 +25758,7 @@ Module(function DefaultPlane() {
             location = Data.User.getLocation() || {};
             coords = Data.User.getCoords() || coords
         } catch (e) {}
-        var address = location.city || "Planet Earth";
-        if (location.region) {
-            address += ", " + location.region.toUpperCase()
-        }
+        var address = location.address || location.city || "Planet Earth";
         var country = (location.country || "").toUpperCase() || "US";
         var countryName = location.country_name || location.country || "";
         var pool = "world";
@@ -27412,6 +27409,46 @@ Data.Class(function User() {
         }
     }
     )();
+    function titleCase(value) {
+        value = (value || "").toString().trim();
+        if (!value) {
+            return ""
+        }
+        return value.split(/\s+/).map(function(part) {
+            if (!part.length) {
+                return part
+            }
+            return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase()
+        }).join(" ")
+    }
+    function normalizeGeo(data) {
+        data = data || {};
+        var city = data.city || data.locality || data.town || data.village || data.suburb || data.region || data.country_name || data.country || "";
+        var region = data.region_code || data.region || "";
+        var country = (data.country_code || data.country || "").toString().toLowerCase();
+        var countryName = data.country_name || data.country || "";
+        if (countryName && countryName.length === 2) {
+            countryName = countryName.toUpperCase()
+        } else {
+            countryName = titleCase(countryName)
+        }
+        city = titleCase(city) || "Planet Earth";
+        region = (region || "").toString().toLowerCase();
+        var coords = data.coords || [data.latitude || 0, data.longitude || 0];
+        var address = city;
+        if (region && city.toLowerCase() !== region) {
+            address += ", " + region.toUpperCase()
+        }
+        return {
+            region: region,
+            city: city,
+            country: country,
+            country_name: countryName,
+            coords: coords,
+            ip: data.ip || "",
+            address: address
+        }
+    }
     function getNativeGeo() {
         Mobile.Geolocation.accuracy = Mobile.Geolocation.NEAREST_TEN;
         Mobile.Geolocation.events.add(Mobile.Events.GEOLOCATION_AUTH, function(e) {
@@ -27436,18 +27473,19 @@ Data.Class(function User() {
         })
     }
     function getAccurateGeo() {
-        var clearGeo = {
+        var clearGeo = normalizeGeo({
             region: "",
             city: "",
             country: "",
             country_name: "",
             coords: [0, 0],
             ip: ""
-        };
+        });
         _data = clearGeo;
         Storage.set("accurate_geo", null);
         var applyGeo = function(data) {
-            if (!data || !data.country || !data.city) {
+            data = normalizeGeo(data);
+            if (!data || (!data.country && !data.city)) {
                 throw new Error("Geo lookup failed")
             }
             _data = data;
@@ -27481,8 +27519,7 @@ Data.Class(function User() {
                 }
             }).onError = function() {
                 XHR.get("assets/data/_geo.json", function(fallbackData) {
-                    _this.data(fallbackData);
-                    Storage.set("accurate_geo", fallbackData)
+                    applyGeo(fallbackData)
                 }).onError = function() {
                     _this.data(clearGeo)
                 }
@@ -27511,22 +27548,17 @@ Data.Class(function User() {
     }
     function checkEmpty() {
         if (!_data.country || _data.country == "" || _data.country == "?" || _data.country == "zz") {
-            _data.region = "Planet Earth";
             _data.country = "";
-            _data.country_name = "";
-            _data.coords = [0, 0]
+            _data.country_name = _data.country_name || ""
         }
         if (!_data.region || _data.region == "" || _data.region == "?") {
-            _data.region = "Planet Earth";
-            _data.country = "";
-            _data.country_name = "";
-            _data.coords = [0, 0]
+            _data.region = ""
         }
         if (!_data.city || _data.city == "" || _data.city == "?") {
-            _data.city = "Planet Earth";
-            _data.country = "";
-            _data.country_name = "";
-            _data.coords = [0, 0]
+            _data.city = _data.region || _data.country_name || "Planet Earth"
+        }
+        if (!_data.address || _data.address == "") {
+            _data.address = _data.city + (_data.region ? ", " + _data.region.toUpperCase() : "")
         }
     }
     function reverseGeocode(lat, lng) {
@@ -27546,21 +27578,25 @@ Data.Class(function User() {
                     }
                     return {}
                 };
-                _data.city = findResult("neighborhood").long_name || findResult("locality").long_name || _data.city;
+                _data.city = findResult("neighborhood").long_name || findResult("locality").long_name || findResult("administrative_area_level_2").long_name || findResult("postal_town").long_name || _data.city;
                 _data.region = findResult("administrative_area_level_1").short_name || _data.region;
                 _data.country = findResult("country").short_name || _data.country;
+                _data.country_name = findResult("country").long_name || _data.country_name || _data.country;
                 _data.coords = [lat, lng];
+                _data = normalizeGeo(_data);
                 Storage.set("accurate_geo", _data)
             } catch (e) {}
         })
     }
     this.getLocation = function() {
-        var data = Storage.get("accurate_geo") || _data || {};
+        var data = normalizeGeo(Storage.get("accurate_geo") || _data || {});
         return {
             country: data.country || "",
             region: data.region || "",
             city: data.city || "",
-            country_name: data.country_name || ""
+            country_name: data.country_name || "",
+            address: data.address || "",
+            coords: data.coords || [0, 0]
         }
     }
     ;
@@ -29286,12 +29322,12 @@ Class(function CreatePlane() {
         console.log("[PaperPlanes] CreatePlane.endFlow fired");
         removePlane();
         var location = Data.User.getLocation();
-        var address = location.city.capitalize() + (location.region.length ? ", " + location.region.toUpperCase() : "");
+        var address = location.address || location.city || "Planet Earth";
         var date = DateUtil.getDate();
         var data = {
             date: date.text,
             address: address,
-            country: location.country.toUpperCase(),
+            country: (location.country || "").toUpperCase(),
             countries: 1,
             stamps: [PlaneStampTexture.DATA]
         };
@@ -36816,15 +36852,10 @@ Class(function PlaneStampTexture() {
         var color = _colors[colorIndex];
         var rotation = Utils.doRandom(-30, 30);
         var location = Data.User.getLocation();
-        var city = location.city || "Planet Earth";
-        if (city.capitalize) {
-            city = city.capitalize()
-        }
-        var region = location.region || "";
-        var address = city + (region.length ? ", " + region.toUpperCase() : "");
+        var address = location.address || location.city || "Planet Earth";
         var date = DateUtil.getDate();
         GATracker.trackEvent("plane", "stamp", "plane stamp", 1);
-        var country = location.country.toUpperCase();
+        var country = (location.country || "").toUpperCase();
         if (country == "US") {
             country = "USA"
         }
