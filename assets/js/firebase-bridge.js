@@ -23,8 +23,29 @@
       firebase.initializeApp(window.FIREBASE_CONFIG);
     }
     state.db = firebase.database();
+    if (firebase.auth) {
+      firebase.auth().signInAnonymously().catch(function(error) {
+        console.warn("Firebase anonymous auth unavailable", error && error.message ? error.message : error);
+      });
+    }
     state.initialized = true;
     return true;
+  }
+
+  function readLocalPlaneFallback() {
+    try {
+      if (window.Storage && Storage.get) {
+        var createdPlanes = Storage.get("created_planes") || [];
+        if (createdPlanes.length) {
+          return createdPlanes[createdPlanes.length - 1];
+        }
+        var myPlanes = Storage.get("myPlanes") || [];
+        if (myPlanes.length) {
+          return myPlanes[0];
+        }
+      }
+    } catch (error) {}
+    return null;
   }
 
   function clone(value) {
@@ -85,6 +106,9 @@
         return getPlaneCount().then(function(count) {
           return { count: count };
         });
+      }).catch(function(error) {
+        console.error("Firebase plane create failed", error);
+        throw error;
       });
     }
 
@@ -92,6 +116,9 @@
       return getPlaneCount().then(function(count) {
         return { count: count };
       });
+    }).catch(function(error) {
+      console.error("Firebase plane update failed", error);
+      throw error;
     });
   }
 
@@ -127,11 +154,11 @@
       if (!value) {
         return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
           var fallbackValue = fallbackSnapshot.val();
-          if (!fallbackValue) {
-            return null;
+          if (fallbackValue) {
+            var fallbackKeys = Object.keys(fallbackValue);
+            return fallbackValue[fallbackKeys[0]];
           }
-          var fallbackKeys = Object.keys(fallbackValue);
-          return fallbackValue[fallbackKeys[0]];
+          return readLocalPlaneFallback();
         });
       }
       var keys = Object.keys(value);
