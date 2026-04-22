@@ -32492,11 +32492,9 @@ Class(function StatsText() {
         })
     }
     this.animateIn = function(stat) {
-        var locationText = stat.location || stat.address || stat.city || "Planet Earth";
-        if (!stat.location && stat.country_name) {
-            locationText += ", " + stat.country_name
-        } else if (!stat.location && stat.country) {
-            locationText += ", " + stat.country
+        var locationText = formatLocationText(stat.city || stat.address || "Planet Earth", stat.region || stat.address, stat.country_name || stat.country);
+        if (!locationText) {
+            locationText = stat.location || stat.address || stat.city || "Planet Earth"
         }
         $text1.html(Copy.THROWN_TEXT[Utils.doRandom(0, Copy.THROWN_TEXT.length - 1)]).clearTransform().clearAlpha();
         $text2.html(locationText).clearTransform().clearAlpha();
@@ -37362,7 +37360,7 @@ Class(function PeaceDayStamp(_s) {
             date.x = -200;
             date.y = -200;
             mask.add(date);
-            var locationText = data.location || (data.address + ", " + (data.country_name || data.country));
+            var locationText = formatLocationText(data.city || data.address || "Planet Earth", data.region || data.address, data.country_name || data.country) || data.location || (data.address + ", " + (data.country_name || data.country));
             var location = new CanvasTexture(drawArcText(locationText, 200, true),440,440);
             location.x = -220;
             location.y = -220;
