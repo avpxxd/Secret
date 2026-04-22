@@ -26667,20 +26667,18 @@ Data.Class(function Planes() {
                 callback(e.count)
             }
         };
-        if (Mobile.System.CONNECTIVITY) {
-            if (usesFirebaseBackend()) {
-                FirebasePlanesBridge.savePlane(data, id, true).then(handleData).catch(function() {
-                    handleData({
-                        count: _this.count || 0
-                    })
+        if (usesFirebaseBackend()) {
+            FirebasePlanesBridge.savePlane(data, id, true).then(handleData).catch(function() {
+                handleData({
+                    count: _this.count || 0
                 })
-            } else {
-                XHR.post(Config.APP_ENGINE + "/setData", {
-                    type: "planes",
-                    data: JSON.stringify(data),
-                    id: id
-                }, handleData)
-            }
+            })
+        } else if (Mobile.System.CONNECTIVITY) {
+            XHR.post(Config.APP_ENGINE + "/setData", {
+                type: "planes",
+                data: JSON.stringify(data),
+                id: id
+            }, handleData)
         } else {
             var count = Storage.get("lastCount") || 0;
             handleData({
