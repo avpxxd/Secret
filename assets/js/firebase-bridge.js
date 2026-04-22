@@ -150,6 +150,95 @@
     });
   }
 
+  function createRestSocket(options) {
+    var socketId = "rest_" + Date.now() + "_" + Math.random().toString(36).slice(2, 10);
+    var seenMessageKeys = {};
+    var seenEventKeys = {};
+    var seenSideKeys = {};
+    var pollTimer = null;
+
+    function accepts(payload) {
+      if (!payload) {
+        return true;
+      }
+      if (payload.x && payload.x !== options.experience) {
+        return false;
+      }
+      return true;
+    }
+
+    function emitValue(callback, payload, isSelf, key) {
+      if (!payload || isSelf || !accepts(payload)) {
+        return;
+      }
+      callback && callback({ d: payload.d });
+      if (key) {
+        return true;
+      }
+      return false;
+    }
+
+    function pollPath(path, seenMap, callback) {
+      return restRequest(path, "GET").then(function(value) {
+        value = value || {};
+        var keys = Object.keys(value).sort();
+        var start = Math.max(0, keys.length - 200);
+        for (var i = start; i < keys.length; i++) {
+          var key = keys[i];
+          if (seenMap[key]) {
+            continue;
+          }
+          seenMap[key] = 1;
+          var payload = value[key];
+          emitValue(callback, payload, payload && payload.senderId === socketId, key);
+        }
+      }).catch(function() {});
+    }
+
+    function startPolling() {
+      if (pollTimer) {
+        clearInterval(pollTimer);
+      }
+      var poll = function() {
+        pollPath("live/messages", seenMessageKeys, options.onMessage);
+        pollPath("live/events", seenEventKeys, options.onEvent);
+        pollPath("live/side", seenSideKeys, options.onSide);
+      };
+      poll();
+      pollTimer = setInterval(poll, 2000);
+    }
+
+    options.onReady && options.onReady();
+    startPolling();
+
+    return {
+      send: function(data) {
+        restRequest("live/messages", "POST", {
+          d: data,
+          t: options.type,
+          x: options.experience,
+          senderId: socketId,
+          createdAt: Date.now()
+        });
+      },
+      emitToSide: function(data) {
+        restRequest("live/side", "POST", {
+          d: data,
+          t: options.type,
+          x: options.experience,
+          senderId: socketId,
+          createdAt: Date.now()
+        });
+      },
+      disconnect: function() {
+        if (pollTimer) {
+          clearInterval(pollTimer);
+          pollTimer = null;
+        }
+      }
+    };
+  }
+
   function readLocalPlaneFallback() {
     try {
       if (window.Storage && Storage.get) {
@@ -385,11 +474,7 @@
           options.onReady();
         }, 0);
       }
-      return {
-        send: function() {},
-        emitToSide: function() {},
-        disconnect: function() {}
-      };
+      return createRestSocket(options || {});
     }
     ensureReady();
 

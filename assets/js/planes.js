@@ -31825,13 +31825,20 @@ Class(function IntroDesktopView() {
             lineHeight: 100,
             margin: "auto",
         });
-        $qr.size(180, 180).center().css({
+        $qr.size(180, 180).css({
+            position: "absolute",
             top: "50%",
-            marginTop: -220,
+            left: 0,
+            right: 0,
+            width: 180,
+            height: 180,
+            margin: "-220px auto 0",
             backgroundSize: "contain",
             backgroundRepeat: "no-repeat",
             backgroundPosition: "center",
-            opacity: 1
+            opacity: 1,
+            zIndex: 5,
+            pointerEvents: "none"
         }).bg("assets/images/common/qr-code.png");
         $connect.html(Copy.CONNECT).css({
             right: 0,
