@@ -36816,7 +36816,12 @@ Class(function PlaneStampTexture() {
         var color = _colors[colorIndex];
         var rotation = Utils.doRandom(-30, 30);
         var location = Data.User.getLocation();
-        var address = location.city.capitalize() + (location.region.length ? ", " + location.region.toUpperCase() : "");
+        var city = location.city || "Planet Earth";
+        if (city.capitalize) {
+            city = city.capitalize()
+        }
+        var region = location.region || "";
+        var address = city + (region.length ? ", " + region.toUpperCase() : "");
         var date = DateUtil.getDate();
         GATracker.trackEvent("plane", "stamp", "plane stamp", 1);
         var country = location.country.toUpperCase();
@@ -36829,6 +36834,8 @@ Class(function PlaneStampTexture() {
         if (country == "AU") {
             country = "AUS"
         }
+        var countryName = location.country_name || country;
+        var fullLocation = address + (countryName ? ", " + countryName : "");
         PlaneStampTexture.DATA = {
             position: {
                 x: x,
@@ -36840,8 +36847,9 @@ Class(function PlaneStampTexture() {
             image: null,
             date: date.numeric,
             address: address,
+            location: fullLocation,
             country: country,
-            country_name: location.country_name,
+            country_name: countryName,
             coords: Data.User.getCoords(),
         };
         style.addStamp(_canvas, PlaneStampTexture.DATA, function(graphics) {
@@ -37191,7 +37199,8 @@ Class(function PeaceDayStamp(_s) {
             date.x = -200;
             date.y = -200;
             mask.add(date);
-            var location = new CanvasTexture(drawArcText("International Day of Peace", 200, true),440,440);
+            var locationText = data.location || (data.address + ", " + (data.country_name || data.country));
+            var location = new CanvasTexture(drawArcText(locationText, 200, true),440,440);
             location.x = -220;
             location.y = -220;
             mask.add(location);
