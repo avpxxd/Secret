@@ -28916,8 +28916,8 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat = _this.delayedCall(showStat, 1000);
-        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 500)
+        _timeoutStat = _this.delayedCall(showStat, 10000);
+        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 10000)
     }
     function addHandlers() {
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopStats);
@@ -32458,7 +32458,7 @@ Class(function StatsMeshText() {
         _captionShader.uniforms.yOffset.value = -100;
         _titleShader.tween("opacity", 1, 8000, "easeOutCubic", 5000);
         _captionShader.tween("opacity", 1, 8000, "easeOutCubic", 4700);
-        _this.delayedCall(_this.animateOut, 150000);
+        _this.delayedCall(_this.animateOut, 10000);
         TweenManager.tween(_rotation, {
             strength: 0.1
         }, 6000, "easeOutCubic", 4000, null, updateRotation)
