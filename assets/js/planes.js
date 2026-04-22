@@ -27383,20 +27383,8 @@ Data.Class(function User() {
             getNativeGeo();
             _this.ready = true
         } else {
-            if (Storage.get("accurate_geo")) {
-                getAccurateGeo();
-                _this.ready = true
-            } else {
-                XHR.get("assets/data/_geo.json", function(data) {
-                    _this.data(data);
-                    _this.ready = true
-                }).onError = function() {
-                    XHR.get("assets/data/_geo.json", function(data) {
-                        _this.data(data);
-                        _this.ready = true
-                    })
-                }
-            }
+            getAccurateGeo();
+            _this.ready = true
         }
     }
     )();
@@ -27424,11 +27412,46 @@ Data.Class(function User() {
         })
     }
     function getAccurateGeo() {
-        navigator.geolocation.getCurrentPosition(function(data) {
-            var lat = data.coords.latitude;
-            var lng = data.coords.longitude;
-            reverseGeocode(lat, lng)
-        })
+        XHR.get("https://ipwho.is/", function(data) {
+            try {
+                if (typeof data == "string") {
+                    data = JSON.parse(data)
+                }
+                if (!data || data.success === false) {
+                    throw new Error("IP lookup failed")
+                }
+                _data = {
+                    region: data.region_code || data.region || "",
+                    city: data.city || "",
+                    country: data.country_code || data.country || "",
+                    country_name: data.country || "",
+                    coords: [data.latitude || 0, data.longitude || 0],
+                    ip: data.ip || ""
+                };
+                checkEmpty();
+                Storage.set("accurate_geo", _data)
+            } catch (e) {
+                XHR.get("assets/data/_geo.json", function(fallbackData) {
+                    _this.data(fallbackData);
+                    Storage.set("accurate_geo", fallbackData)
+                }).onError = function() {
+                    XHR.get("assets/data/_geo.json", function(fallbackData) {
+                        _this.data(fallbackData);
+                        Storage.set("accurate_geo", fallbackData)
+                    })
+                }
+            }
+        }).onError = function() {
+            XHR.get("assets/data/_geo.json", function(fallbackData) {
+                _this.data(fallbackData);
+                Storage.set("accurate_geo", fallbackData)
+            }).onError = function() {
+                XHR.get("assets/data/_geo.json", function(fallbackData) {
+                    _this.data(fallbackData);
+                    Storage.set("accurate_geo", fallbackData)
+                })
+            }
+        }
     }
     function setIOData() {
         _data.region = "ca";
