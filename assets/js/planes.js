@@ -27492,21 +27492,33 @@ Data.Class(function User() {
             checkEmpty();
             Storage.set("accurate_geo", _data)
         };
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                reverseGeocode(position.coords.latitude, position.coords.longitude)
-            }, function() {
+        var loadIpGeo = function() {
+            XHR.get("https://ipwho.is/", function(data) {
+                try {
+                    if (typeof data == "string") {
+                        data = JSON.parse(data)
+                    }
+                    if (!data || data.success === false) {
+                        throw new Error("IP lookup failed")
+                    }
+                    applyGeo({
+                        region: data.region_code || data.region || "",
+                        city: data.city || "",
+                        country: data.country_code || data.country || "",
+                        country_name: data.country || data.country_name || "",
+                        coords: [data.latitude || 0, data.longitude || 0],
+                        ip: data.ip || ""
+                    })
+                } catch (e) {
+                    checkEmpty();
+                    Storage.set("accurate_geo", _data)
+                }
+            }).onError = function() {
                 checkEmpty();
                 Storage.set("accurate_geo", _data)
-            }, {
-                enableHighAccuracy: true,
-                timeout: 10000,
-                maximumAge: 0
-            })
-        } else {
-            checkEmpty();
-            Storage.set("accurate_geo", _data)
-        }
+            }
+        };
+        loadIpGeo()
     }
     function setIOData() {
         _data.region = "ca";
