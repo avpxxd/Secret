@@ -27668,10 +27668,10 @@ Data.Class(function User() {
             _data.region = ""
         }
         if (!_data.city || _data.city == "" || _data.city == "?") {
-            _data.city = _data.region || _data.country_name || "Planet Earth"
+            _data.city = _data.region || ""
         }
         if (!_data.address || _data.address == "") {
-            _data.address = formatLocationText(_data.city, _data.region)
+            _data.address = formatLocationText(_data.city, _data.region, _data.country_name || _data.country)
         }
     }
     function reverseGeocode(lat, lng) {
@@ -27708,7 +27708,7 @@ Data.Class(function User() {
             region: data.region || "",
             city: data.city || "",
             country_name: data.country_name || "",
-            address: data.address || "",
+            address: data.address || formatLocationText(data.city, data.region, data.country_name || data.country),
             coords: data.coords || [0, 0]
         }
     }
