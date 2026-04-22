@@ -28,13 +28,13 @@
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black">
 
-	<link rel="apple-touch-icon" sizes="76x76" href="/assets/meta/apple-touch-icon-76x76.png">
-	<link rel="apple-touch-icon" sizes="120x120" href="/assets/meta/apple-touch-icon-120x120.png">
-	<link rel="apple-touch-icon" sizes="152x152" href="/assets/meta/apple-touch-icon-152x152.png">
-	<link rel="apple-touch-icon" sizes="180x180" href="/assets/meta/apple-touch-icon-180x180.png">
+	<link rel="apple-touch-icon" sizes="76x76" href="assets/meta/apple-touch-icon-76x76.png">
+	<link rel="apple-touch-icon" sizes="120x120" href="assets/meta/apple-touch-icon-120x120.png">
+	<link rel="apple-touch-icon" sizes="152x152" href="assets/meta/apple-touch-icon-152x152.png">
+	<link rel="apple-touch-icon" sizes="180x180" href="assets/meta/apple-touch-icon-180x180.png">
 
-	<link rel="icon" sizes="192x192" href="/assets/meta/icon-192.png">
-	<link rel="icon" sizes="128x128" href="/assets/meta/icon-128.png">
+	<link rel="icon" sizes="192x192" href="assets/meta/icon-192.png">
+	<link rel="icon" sizes="128x128" href="assets/meta/icon-128.png">
 
 	<!--[if lte IE 9]>
     <script type="text/javascript">
@@ -42,14 +42,18 @@
     </script>
     <![endif]-->
 
-	<link rel="stylesheet" href="/assets/css/style.css" type="text/css">
+	<!-- Inline fallback so the page is never a blank white screen even if the
+	     external stylesheet fails to load (e.g. file:// protocol or sub-path hosting). -->
+	<style>html,body{margin:0;padding:0;width:100%;height:100%;background:#bfb9f3;overflow:hidden;}</style>
+
+	<link rel="stylesheet" href="assets/css/style.css" type="text/css">
 	<link rel="manifest" href="manifest.json">
 
 	<script>
 		var _CACHE_ = "1571274419678";
 		var _BUCKET_ = "at-paperplanes";
 	</script>
-	<script src="/assets/js/planes.js" async="false"></script>
+	<script src="assets/js/planes.js" async="false"></script>
 </head>
 <body>
 </body>
