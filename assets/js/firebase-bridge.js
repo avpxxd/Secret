@@ -7,8 +7,7 @@
     socketRef: null,
     socketHandlers: [],
     liveHandlers: [],
-    authReady: null,
-    recentPlaneIds: {}
+    authReady: null
   };
 
   function hasConfig() {
@@ -428,31 +427,6 @@
     if (!init()) {
       return Promise.resolve(readLocalPlaneFallback());
     }
-    function getHistoryKey() {
-      return "firebase_selected_planes_" + pool;
-    }
-    function readRecent() {
-      var recent = state.recentPlaneIds[pool];
-      if (recent) {
-        return recent.slice();
-      }
-      try {
-        recent = JSON.parse(window.localStorage.getItem(getHistoryKey()) || "[]");
-      } catch (error) {
-        recent = [];
-      }
-      if (!Array.isArray(recent)) {
-        recent = [];
-      }
-      state.recentPlaneIds[pool] = recent;
-      return recent.slice();
-    }
-    function writeRecent(recent) {
-      state.recentPlaneIds[pool] = recent.slice(-8);
-      try {
-        window.localStorage.setItem(getHistoryKey(), JSON.stringify(state.recentPlaneIds[pool]));
-      } catch (error) {}
-    }
     function randomIndex(length) {
       if (length <= 1) {
         return 0;
@@ -467,21 +441,17 @@
     function choosePlaneFromValue(value) {
       value = value || {};
       var keys = Object.keys(value).filter(function(key) {
-        return !!value[key];
+        return !!value[key] && (!pool || value[key].pool == pool || !value[key].pool);
       });
+      if (!keys.length) {
+        keys = Object.keys(value).filter(function(key) {
+          return !!value[key];
+        });
+      }
       if (!keys.length) {
         return null;
       }
-      var recent = readRecent();
-      var filteredKeys = keys.filter(function(key) {
-        return recent.indexOf(key) === -1;
-      });
-      if (filteredKeys.length) {
-        keys = filteredKeys;
-      }
       var selectedKey = keys[randomIndex(keys.length)];
-      recent.push(selectedKey);
-      writeRecent(recent);
       return value[selectedKey];
     }
     return ensureReady().then(function() {
@@ -506,7 +476,14 @@
         if (plane) {
           return plane;
         }
-        return readLocalPlaneFallback();
+        return ref.orderByChild("updatedAt").limitToLast(25).once("value").then(function(fallbackSnapshot) {
+          var fallbackValue = fallbackSnapshot.val();
+          var fallbackPlane = choosePlaneFromValue(fallbackValue);
+          if (fallbackPlane) {
+            return fallbackPlane;
+          }
+          return readLocalPlaneFallback();
+        });
       });
     });
   }
