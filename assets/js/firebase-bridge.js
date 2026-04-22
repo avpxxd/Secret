@@ -1,4 +1,5 @@
 (function(window) {
+  console.log("[PaperPlanes] Firebase bridge script loaded");
   var state = {
     initialized: false,
     db: null,
@@ -16,13 +17,17 @@
 
   function init() {
     if (state.initialized) {
+      console.log("[PaperPlanes] Firebase bridge init skipped (already initialized)");
       return true;
     }
+    console.log("[PaperPlanes] Firebase bridge init checking config", window.FIREBASE_CONFIG || null);
     if (!hasConfig()) {
+      console.log("[PaperPlanes] Firebase bridge init failed (missing config)");
       return false;
     }
     state.useRest = true;
     state.initialized = true;
+    console.log("[PaperPlanes] Firebase bridge init ready", { useRest: state.useRest });
     window.FirebasePlanesBridgeReady = true;
     return true;
   }
@@ -212,14 +217,18 @@
   }
 
   function savePlane(data, id, isNew) {
+    console.log("[PaperPlanes] Firebase bridge savePlane called", { id: id, isNew: !!isNew });
     if (!init()) {
+      console.log("[PaperPlanes] Firebase bridge savePlane returning fallback count 0");
       return Promise.resolve({ count: 0 });
     }
 
     return ensureReady().then(function() {
       if (state.useRest || !state.db) {
+        console.log("[PaperPlanes] Firebase bridge savePlane using REST");
         return restSavePlane(data, id, isNew);
       }
+      console.log("[PaperPlanes] Firebase bridge savePlane using SDK");
       var payload = clone(data);
       payload.id = id;
       payload.data = JSON.stringify(payload);
