@@ -27423,10 +27423,11 @@ Data.Class(function User() {
     }
     function normalizeGeo(data) {
         data = data || {};
-        var city = data.city || data.locality || data.town || data.village || data.suburb || data.region || data.country_name || data.country || "";
-        var region = data.region_code || data.region || "";
-        var country = (data.country_code || data.country || "").toString().toLowerCase();
-        var countryName = data.country_name || data.country || "";
+        var address = data.address || {};
+        var city = data.city || data.locality || data.town || data.village || data.suburb || address.city || address.town || address.village || address.suburb || address.municipality || address.county || data.region || data.country_name || data.country || "";
+        var region = data.region_code || data.region || address.state || address.region || address.county || "";
+        var country = (data.country_code || data.country || address.country_code || "").toString().toLowerCase();
+        var countryName = data.country_name || data.country || address.country || "";
         if (countryName && countryName.length === 2) {
             countryName = countryName.toUpperCase()
         } else {
@@ -27493,21 +27494,21 @@ Data.Class(function User() {
             Storage.set("accurate_geo", _data)
         };
         var loadIpGeo = function() {
-            XHR.get("https://ipwho.is/", function(data) {
+            XHR.get("https://geolocation-db.com/json/", function(data) {
                 try {
                     if (typeof data == "string") {
                         data = JSON.parse(data)
                     }
-                    if (!data || data.success === false) {
+                    if (!data) {
                         throw new Error("IP lookup failed")
                     }
                     applyGeo({
-                        region: data.region_code || data.region || "",
+                        region: data.state || data.region_code || data.region || "",
                         city: data.city || "",
                         country: data.country_code || data.country || "",
                         country_name: data.country || data.country_name || "",
                         coords: [data.latitude || 0, data.longitude || 0],
-                        ip: data.ip || ""
+                        ip: data.IPv4 || data.ip || ""
                     })
                 } catch (e) {
                     checkEmpty();
@@ -27518,7 +27519,41 @@ Data.Class(function User() {
                 Storage.set("accurate_geo", _data)
             }
         };
-        loadIpGeo()
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                XHR.get("https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + position.coords.latitude + "&lon=" + position.coords.longitude, function(data) {
+                    try {
+                        if (typeof data == "string") {
+                            data = JSON.parse(data)
+                        }
+                        if (!data) {
+                            throw new Error("Reverse geocode failed")
+                        }
+                        applyGeo({
+                            address: data.address || {},
+                            city: data.address && (data.address.city || data.address.town || data.address.village || data.address.suburb || data.address.municipality || data.address.county) || "",
+                            region: data.address && (data.address.state || data.address.region || data.address.county) || "",
+                            country: data.address && (data.address.country_code || data.address.country || "") || "",
+                            country_name: data.address && (data.address.country || "") || "",
+                            coords: [position.coords.latitude, position.coords.longitude],
+                            ip: ""
+                        })
+                    } catch (e) {
+                        loadIpGeo()
+                    }
+                }).onError = function() {
+                    loadIpGeo()
+                }
+            }, function() {
+                loadIpGeo()
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            })
+        } else {
+            loadIpGeo()
+        }
     }
     function setIOData() {
         _data.region = "ca";
