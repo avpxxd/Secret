@@ -504,9 +504,9 @@
       return ref.orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
         var value = snapshot.val();
         if (!value) {
-          return ref.orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
-            var fallbackValue = fallbackSnapshot.val();
-            var fallbackPlane = choosePlaneFromValue(fallbackValue);
+          return ref.once("value").then(function(allSnapshot) {
+            var allValue = allSnapshot.val();
+            var fallbackPlane = choosePlaneFromValue(allValue);
             if (fallbackPlane) {
               return fallbackPlane;
             }
