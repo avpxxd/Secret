@@ -36910,6 +36910,7 @@ Class(function PlaneStampTexture() {
     var _colors = Config.STAMPS_COLORS;
     var _colorCount = Utils.doRandom(0, _colors.length - 1);
     var _styleCount = 0;
+    var _lastStyleIndex = -1;
     var _canvases = [];
     (function() {
         initTexture();
@@ -36987,7 +36988,15 @@ Class(function PlaneStampTexture() {
                 child.destroy()
             }
         }
-        var styleIndex = _stylesSelection[_styleCount % _stylesSelection.length];
+        var styleIndex = _stylesSelection[Utils.doRandom(0, _stylesSelection.length - 1)];
+        if (_stylesSelection.length > 1) {
+            var attempts = 0;
+            while (styleIndex === _lastStyleIndex && attempts < 5) {
+                styleIndex = _stylesSelection[Utils.doRandom(0, _stylesSelection.length - 1)];
+                attempts++
+            }
+        }
+        _lastStyleIndex = styleIndex;
         var style = _stylesList[styleIndex];
         var colorIndex = _colorCount % _colors.length;
         var color = _colors[colorIndex];
