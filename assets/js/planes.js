@@ -27419,7 +27419,7 @@ Data.Class(function User() {
         })
     }
     function getAccurateGeo() {
-        XHR.get("/geo", function(data) {
+        XHR.get("/Secret/geo", function(data) {
             try {
                 if (typeof data == "string") {
                     data = JSON.parse(data)
