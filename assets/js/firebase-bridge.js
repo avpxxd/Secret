@@ -68,23 +68,27 @@
   }
 
   function planeRef(id) {
-    return state.db.ref("planes/" + id);
+    return state.db ? state.db.ref("planes/" + id) : null;
   }
 
   function planesRef() {
-    return state.db.ref("planes");
+    return state.db ? state.db.ref("planes") : null;
   }
 
   function metaRef() {
-    return state.db.ref("meta/planeCount");
+    return state.db ? state.db.ref("meta/planeCount") : null;
   }
 
   function latestPlaneRef() {
-    return state.db.ref("meta/latestPlane");
+    return state.db ? state.db.ref("meta/latestPlane") : null;
   }
 
   function incrementPlaneCount() {
-    return metaRef().transaction(function(current) {
+    var ref = metaRef();
+    if (!ref) {
+      return Promise.resolve(0);
+    }
+    return ref.transaction(function(current) {
       return (current || 0) + 1;
     }).then(function(result) {
       return result.snapshot.val() || 0;
@@ -92,14 +96,22 @@
   }
 
   function getPlaneCount() {
-    return metaRef().once("value").then(function(snapshot) {
+    if (!init() || !state.db) {
+      return Promise.resolve(0);
+    }
+    var ref = metaRef();
+    var planes = planesRef();
+    if (!ref || !planes) {
+      return Promise.resolve(0);
+    }
+    return ref.once("value").then(function(snapshot) {
       var metaCount = snapshot.val() || 0;
-      return planesRef().once("value").then(function(planesSnapshot) {
+      return planes.once("value").then(function(planesSnapshot) {
         var value = planesSnapshot.val() || {};
         var actualCount = Object.keys(value).length;
         var count = Math.max(metaCount, actualCount);
         if (count !== metaCount) {
-          metaRef().set(count);
+          ref.set(count);
         }
         return count;
       });
@@ -108,10 +120,13 @@
 
   function savePlane(data, id, isNew) {
     if (!init()) {
-      return Promise.reject(new Error("Firebase is not configured"));
+      return Promise.resolve({ count: 0 });
     }
 
     return ensureReady().then(function() {
+      if (!state.db) {
+        return { count: 0 };
+      }
       var payload = clone(data);
       payload.id = id;
       payload.data = JSON.stringify(payload);
@@ -159,10 +174,14 @@
 
   function getPlane(id) {
     if (!init()) {
-      return Promise.reject(new Error("Firebase is not configured"));
+      return Promise.resolve(null);
     }
     return ensureReady().then(function() {
-      return planeRef(id).once("value").then(function(snapshot) {
+      var ref = planeRef(id);
+      if (!ref) {
+        return null;
+      }
+      return ref.once("value").then(function(snapshot) {
         return snapshot.val();
       });
     });
@@ -170,10 +189,14 @@
 
   function getLatestPlane() {
     if (!init()) {
-      return Promise.reject(new Error("Firebase is not configured"));
+      return Promise.resolve(null);
     }
     return ensureReady().then(function() {
-      return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(snapshot) {
+      var ref = planesRef();
+      if (!ref) {
+        return null;
+      }
+      return ref.orderByChild("updatedAt").limitToLast(1).once("value").then(function(snapshot) {
         var value = snapshot.val();
         if (!value) {
           return null;
@@ -186,13 +209,17 @@
 
   function selectPlane(pool) {
     if (!init()) {
-      return Promise.reject(new Error("Firebase is not configured"));
+      return Promise.resolve(readLocalPlaneFallback());
     }
     return ensureReady().then(function() {
-      return planesRef().orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
+      var ref = planesRef();
+      if (!ref) {
+        return readLocalPlaneFallback();
+      }
+      return ref.orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
         var value = snapshot.val();
         if (!value) {
-          return planesRef().orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
+          return ref.orderByChild("updatedAt").limitToLast(1).once("value").then(function(fallbackSnapshot) {
             var fallbackValue = fallbackSnapshot.val();
             if (fallbackValue) {
               var fallbackKeys = Object.keys(fallbackValue);
