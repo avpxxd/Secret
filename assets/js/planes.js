@@ -27419,38 +27419,70 @@ Data.Class(function User() {
         })
     }
     function getAccurateGeo() {
-        XHR.get("/Secret/geo", function(data) {
-            try {
-                if (typeof data == "string") {
-                    data = JSON.parse(data)
-                }
-                if (!data || !data.country || !data.city) {
-                    throw new Error("Geo lookup failed")
-                }
-                _data = data;
-                checkEmpty();
-                Storage.set("accurate_geo", _data)
-            } catch (e) {
-                XHR.get("assets/data/_geo.json", function(fallbackData) {
-                    _this.data(fallbackData);
-                    Storage.set("accurate_geo", fallbackData)
-                }).onError = function() {
+        var clearGeo = {
+            region: "",
+            city: "",
+            country: "",
+            country_name: "",
+            coords: [0, 0],
+            ip: ""
+        };
+        _data = clearGeo;
+        Storage.set("accurate_geo", null);
+        var applyGeo = function(data) {
+            if (!data || !data.country || !data.city) {
+                throw new Error("Geo lookup failed")
+            }
+            _data = data;
+            checkEmpty();
+            Storage.set("accurate_geo", _data)
+        };
+        var loadIpGeo = function() {
+            XHR.get("https://ipapi.co/json/", function(data) {
+                try {
+                    if (typeof data == "string") {
+                        data = JSON.parse(data)
+                    }
+                    if (!data || data.error) {
+                        throw new Error("IP lookup failed")
+                    }
+                    applyGeo({
+                        region: data.region_code || data.region || "",
+                        city: data.city || "",
+                        country: data.country_code || data.country || "",
+                        country_name: data.country_name || data.country || "",
+                        coords: [data.latitude || 0, data.longitude || 0],
+                        ip: data.ip || ""
+                    })
+                } catch (e) {
                     XHR.get("assets/data/_geo.json", function(fallbackData) {
                         _this.data(fallbackData);
                         Storage.set("accurate_geo", fallbackData)
-                    })
+                    }).onError = function() {
+                        _this.data(clearGeo)
+                    }
                 }
-            }
-        }).onError = function() {
-            XHR.get("assets/data/_geo.json", function(fallbackData) {
-                _this.data(fallbackData);
-                Storage.set("accurate_geo", fallbackData)
             }).onError = function() {
                 XHR.get("assets/data/_geo.json", function(fallbackData) {
                     _this.data(fallbackData);
                     Storage.set("accurate_geo", fallbackData)
-                })
+                }).onError = function() {
+                    _this.data(clearGeo)
+                }
             }
+        };
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                reverseGeocode(position.coords.latitude, position.coords.longitude)
+            }, function() {
+                loadIpGeo()
+            }, {
+                enableHighAccuracy: true,
+                timeout: 10000,
+                maximumAge: 0
+            })
+        } else {
+            loadIpGeo()
         }
     }
     function setIOData() {
