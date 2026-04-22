@@ -8,8 +8,7 @@
     socketHandlers: [],
     liveHandlers: [],
     authReady: null,
-    lastSelectedPlaneId: null,
-    planeHistory: {}
+    planeBags: {}
   };
 
   function hasConfig() {
@@ -432,57 +431,51 @@
     function getHistoryKey() {
       return "firebase_selected_planes_" + pool;
     }
-    function readHistory() {
-      var history = state.planeHistory[pool];
-      if (history) {
-        return history.slice();
+    function shuffle(values) {
+      for (var i = values.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        var temp = values[i];
+        values[i] = values[j];
+        values[j] = temp;
       }
-      try {
-        history = JSON.parse(window.localStorage.getItem(getHistoryKey()) || "[]");
-      } catch (error) {
-        history = [];
-      }
-      state.planeHistory[pool] = history;
-      return history.slice();
+      return values;
     }
-    function writeHistory(history) {
-      state.planeHistory[pool] = history.slice(-12);
+    function readBag() {
+      var bag = state.planeBags[pool];
+      if (bag) {
+        return bag.slice();
+      }
       try {
-        window.localStorage.setItem(getHistoryKey(), JSON.stringify(state.planeHistory[pool]));
+        bag = JSON.parse(window.localStorage.getItem(getHistoryKey()) || "[]");
+      } catch (error) {}
+      if (!Array.isArray(bag)) {
+        bag = [];
+      }
+      state.planeBags[pool] = bag;
+      return bag.slice();
+    }
+    function writeBag(bag) {
+      state.planeBags[pool] = bag.slice();
+      try {
+        window.localStorage.setItem(getHistoryKey(), JSON.stringify(state.planeBags[pool]));
       } catch (error) {}
     }
     function choosePlaneFromValue(value) {
       value = value || {};
       var keys = Object.keys(value).filter(function(key) {
-        return value[key] && value[key].pool == pool;
+        return !!value[key];
       });
-      if (!keys.length) {
-        keys = Object.keys(value);
-      }
       if (!keys.length) {
         return null;
       }
-      var history = readHistory();
-      if (keys.length > 1 && history.length) {
-        var filteredKeys = keys.filter(function(key) {
-          return history.indexOf(key) === -1;
-        });
-        if (filteredKeys.length) {
-          keys = filteredKeys;
-        }
+      var bag = readBag().filter(function(key) {
+        return keys.indexOf(key) !== -1;
+      });
+      if (!bag.length) {
+        bag = shuffle(keys.slice());
       }
-      if (keys.length > 1 && state.lastSelectedPlaneId) {
-        var notLastKeys = keys.filter(function(key) {
-          return key !== state.lastSelectedPlaneId;
-        });
-        if (notLastKeys.length) {
-          keys = notLastKeys;
-        }
-      }
-      var selectedKey = keys[Math.floor(Math.random() * keys.length)];
-      state.lastSelectedPlaneId = selectedKey;
-      history.push(selectedKey);
-      writeHistory(history);
+      var selectedKey = bag.pop();
+      writeBag(bag);
       return value[selectedKey];
     }
     return ensureReady().then(function() {
@@ -501,18 +494,8 @@
       if (!ref) {
         return readLocalPlaneFallback();
       }
-      return ref.orderByChild("pool").equalTo(pool).once("value").then(function(snapshot) {
+      return ref.once("value").then(function(snapshot) {
         var value = snapshot.val();
-        if (!value) {
-          return ref.once("value").then(function(allSnapshot) {
-            var allValue = allSnapshot.val();
-            var fallbackPlane = choosePlaneFromValue(allValue);
-            if (fallbackPlane) {
-              return fallbackPlane;
-            }
-            return readLocalPlaneFallback();
-          });
-        }
         var plane = choosePlaneFromValue(value);
         if (plane) {
           return plane;
