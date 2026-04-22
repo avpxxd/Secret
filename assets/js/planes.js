@@ -27393,6 +27393,7 @@ function abbreviateRegion(region, country) {
         return ""
     }
     var normalized = region.toLowerCase().replace(/\./g, "");
+    var countryCode = (country || "").toString().trim().toLowerCase();
     var map = {
         alberta: "AB",
         "british columbia": "BC",
@@ -27463,7 +27464,10 @@ function abbreviateRegion(region, country) {
     if (normalized.length <= 3) {
         return normalized.toUpperCase()
     }
-    return map[normalized] || region.toUpperCase()
+    if (countryCode == "ca" || countryCode == "us") {
+        return map[normalized] || titleCase(region)
+    }
+    return titleCase(region)
 }
 
 function formatLocationText(city, region, countryName) {
