@@ -9575,7 +9575,10 @@ Class(function Thread(_class) {
         if (_worker.terminate) {
             _worker.terminate()
         }
-        return this._destroy()
+        if (typeof this._destroy === "function") {
+            return this._destroy()
+        }
+        return this
     }
 }, function() {
     Thread.PATH = ""
@@ -13575,6 +13578,9 @@ Module(function iOSDevices() {
             enumerable: true,
             configurable: true
         });
+        function createSilentBuffer() {
+            return Klang.context.createBuffer(1, 1, Klang.context.sampleRate)
+        }
         FileHandler.prototype.sendProgressCallback = function(group) {
             var loadGroup = this._groups[group];
             if (loadGroup.progressCallback && !loadGroup.loadInterrupted) {
@@ -13645,7 +13651,17 @@ Module(function iOSDevices() {
                         }
                     }
                 }, function(ex) {
-                    Klang.log("Klang warning: unable to load file '" + (this._baseURL || "") + info.url + "'")
+                    var group = _this._groups[info.load_group];
+                    _this._decoding = false;
+                    _this.addFile(info, createSilentBuffer());
+                    group.progress.convertedFiles++;
+                    if (_this._bufferQue.length) {
+                        _this.decodeBufferQue()
+                    } else {
+                        if (callback) {
+                            callback()
+                        }
+                    }
                 })
             }
         }
@@ -13668,6 +13684,17 @@ Module(function iOSDevices() {
             ;
             request.onload = function(e) {
                 var group = _this._groups[info.load_group];
+                if (request.status != 200 || !request.response || !request.response.byteLength) {
+                    _this.addFile(info, createSilentBuffer());
+                    if (callback) {
+                        callback()
+                    }
+                    try {
+                        request.response = null
+                    } catch (e) {}
+                    request = null;
+                    return
+                }
                 _this._bufferQue.push({
                     data: request.response,
                     load_group: group,
@@ -13689,13 +13716,18 @@ Module(function iOSDevices() {
             }
             ;
             request.onreadystatechange = function() {
-                if (request.readyState == 4 && request.status == 200) {} else {
-                    if (request.status != 200) {
-                        _this._groups[info.load_group].loadInterrupted = true;
-                        if (_this._groups[info.load_group].loadFailedCallback) {
-                            _this._groups[info.load_group].loadFailedCallback()
-                        }
-                    }
+                if (request.readyState == 4 && request.status == 200) {
+                }
+            }
+            ;
+            request.onerror = function() {
+                var group = _this._groups[info.load_group];
+                if (!group || group.loadInterrupted) {
+                    return
+                }
+                _this.addFile(info, createSilentBuffer());
+                if (callback) {
+                    callback()
                 }
             }
             ;
