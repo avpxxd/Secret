@@ -27923,6 +27923,7 @@ Class(function ThrownPlane() {
     var _livePlane;
     var _isListening = false;
     var _dummyPlaneTimer;
+    var _dummyPlaneVisibleHandler;
     this.group = new THREE.Group();
     var _colors = Config.STAMPS_COLORS;
     var _throttle = 0;
@@ -27953,6 +27954,7 @@ Class(function ThrownPlane() {
         listenToPlanes();
         _this.events.subscribe(PlanesEvents.ALLOW_PLANES, listenToPlanes);
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopListeningToPlanes);
+        _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopDummyPlaneLoop);
         _debug = function(e) {
             if (e.keyCode == 32) {
                 var location = Config.LOCATIONS[Utils.doRandom(0, Config.LOCATIONS.length - 1)];
@@ -27978,13 +27980,32 @@ Class(function ThrownPlane() {
         if (Device.mobile || !Config.LOCATIONS || !Config.LOCATIONS.length) {
             return
         }
+        if (document.hidden) {
+            return
+        }
         if (_dummyPlaneTimer) {
             clearTimeout(_dummyPlaneTimer)
+        }
+        if (!_dummyPlaneVisibleHandler) {
+            _dummyPlaneVisibleHandler = function() {
+                if (document.hidden) {
+                    stopDummyPlaneLoop()
+                } else {
+                    startDummyPlaneLoop()
+                }
+            }
+            document.addEventListener("visibilitychange", _dummyPlaneVisibleHandler)
         }
         _dummyPlaneTimer = _this.delayedCall(function() {
             createDummyPlane();
             startDummyPlaneLoop()
         }, 120000)
+    }
+    function stopDummyPlaneLoop() {
+        if (_dummyPlaneTimer) {
+            clearTimeout(_dummyPlaneTimer);
+            _dummyPlaneTimer = null
+        }
     }
     function createDummyPlane() {
         var location = Config.LOCATIONS[Utils.doRandom(0, Config.LOCATIONS.length - 1)];
@@ -28184,6 +28205,9 @@ Class(function Stats() {
         }
     }
     function addRealtimeLocation(location) {
+        if (_realTimeQueue.length >= 5) {
+            _realTimeQueue.shift()
+        }
         _realTimeQueue.push(location);
         if (_isRealTimeShowing) {
             return
@@ -31753,7 +31777,6 @@ Class(function StatsPing() {
         mesh.position.x = 166;
         _this.group.add(mesh);
         FXObjects.register(mesh);
-        _this.group.add(mesh);
         _this.group.rotation.reorder("YXZ");
         Earth.instance().object3D.add(_this.group)
     }
