@@ -28182,11 +28182,22 @@ Class(function Stats() {
         _text = _this.initClass(StatsMeshText);
         _ping = _this.initClass(StatsPing)
     }
+    function clearStatTimeouts() {
+        if (_timeoutStat) {
+            clearTimeout(_timeoutStat);
+            _timeoutStat = null
+        }
+        if (_timeoutStat2) {
+            clearTimeout(_timeoutStat2);
+            _timeoutStat2 = null
+        }
+    }
     function showStat() {
         if (_realTimeQueue.length === 0) {
             _isRealTimeShowing = false;
             return
         }
+        clearStatTimeouts();
         _isRealTimeShowing = true;
         var stat = _realTimeQueue.shift();
         _realTimeLocation = null;
@@ -28194,8 +28205,16 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 9500);
-        _timeoutStat = _this.delayedCall(showStat, 19500);
+        _timeoutStat2 = _this.delayedCall(function() {
+            _movement.zoomOut();
+            _timeoutStat = _this.delayedCall(function() {
+                if (_realTimeQueue.length === 0) {
+                    _isRealTimeShowing = false;
+                    return
+                }
+                showStat()
+            }, 10000)
+        }, 9500)
     }
     function addHandlers() {
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopStats);
@@ -28207,12 +28226,7 @@ Class(function Stats() {
         _realTimeQueue = [];
         _realTimeLocation = null;
         _isRealTimeShowing = false;
-        if (_timeoutStat) {
-            clearTimeout(_timeoutStat)
-        }
-        if (_timeoutStat2) {
-            clearTimeout(_timeoutStat2)
-        }
+        clearStatTimeouts()
     }
     function addRealtimeLocation(location) {
         if (_realTimeQueue.length >= 5) {
