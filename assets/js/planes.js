@@ -28786,7 +28786,7 @@ Class(function ThrownPlane() {
             atio: true,
             dummy: true,
             location: location.location
-        })
+        }, true)
     }
     function listenToPlanes() {
         if (_isListening) {
