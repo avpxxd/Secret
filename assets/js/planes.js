@@ -35176,6 +35176,24 @@ Class(function PlaneCaught() {
     }
     ;
     this.onDestroy = function() {
+        if (_throw) {
+            _throw = _throw.destroy()
+        }
+        if (_shadow) {
+            _shadow = _shadow.destroy()
+        }
+        if (_fold) {
+            _fold = _fold.destroy()
+        }
+        if (_stamp) {
+            _stamp = _stamp.destroy()
+        }
+        if (_pinch) {
+            _pinch = _pinch.destroy()
+        }
+        if (_animation) {
+            _animation = _animation.destroy()
+        }
         UIMobile.instance().instructions.animateOut();
         UIMobile.instance().removePinchPrompt();
         UIMobile.instance().removeRotatePrompt();
@@ -35423,6 +35441,24 @@ Class(function PlaneNew(_isFirstPlane) {
     }
     this.onDestroy = function() {
         UIMobile.instance().removeRotatePrompt();
+        if (_throw) {
+            _throw = _throw.destroy()
+        }
+        if (_scale) {
+            _scale = _scale.destroy()
+        }
+        if (_fold) {
+            _fold = _fold.destroy()
+        }
+        if (_stamp) {
+            _stamp = _stamp.destroy()
+        }
+        if (_shadow) {
+            _shadow = _shadow.destroy()
+        }
+        if (_animation) {
+            _animation = _animation.destroy()
+        }
         World.instance().scene.remove(_plane.swayContainer)
     }
 });
