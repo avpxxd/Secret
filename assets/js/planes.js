@@ -10356,7 +10356,7 @@ Class(function Config() {
         realtime: true,
         country: "CA"
     }, {
-        location: "Wolfville, Canada",
+        location: "Kentville, Canada",
         coords: {
             lat: 45.09,
             lng: -64.36
