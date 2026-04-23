@@ -26715,6 +26715,16 @@ function formatLocationText(city, region, countryName) {
     return parts.join(", ")
 }
 
+function formatLiveLocationText(city, region, countryName) {
+    city = (city || "").toString().trim();
+    region = abbreviateRegion(region, countryName);
+    countryName = (countryName || "").toString().trim();
+    if (city) {
+        return [city, countryName].filter(Boolean).join(", ")
+    }
+    return [region, countryName].filter(Boolean).join(", ") || countryName || "Planet Earth"
+}
+
 Data.Class(function User() {
     Inherit(this, Model);
     var _this = this;
@@ -28065,7 +28075,7 @@ Class(function ThrownPlane() {
         }
         _ping.display(e.coords);
         if (isLive && !Tests.AT_IO()) {
-            var liveLocation = e.location || e.address || e.city || "Planet Earth";
+            var liveLocation = formatLiveLocationText(e.city || e.location || e.address, e.region, e.country_name || e.country);
             _this.events.fire(PlanesEvents.ADD_REALTIME, {
                 location: liveLocation,
                 address: "",
@@ -28184,8 +28194,8 @@ Class(function Stats() {
         _movement.rotateToLocation(stat);
         _ping.highlightLocation(stat);
         _text.animateIn(stat, position);
-        _timeoutStat = _this.delayedCall(showStat, 10000);
-        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 10000)
+        _timeoutStat = _this.delayedCall(showStat, 7000);
+        _timeoutStat2 = _this.delayedCall(_movement.zoomOut, 7000)
     }
     function addHandlers() {
         _this.events.subscribe(PlanesEvents.END_EXPERIENCE, stopStats);
@@ -31730,6 +31740,7 @@ Class(function StatsMeshText() {
     }
     this.animateIn = function(stat, position) {
         _rotation.position = position;
+        _this.group.scale.set(1, 1, 1);
         var text = new BMFontText({
             text: stat.location,
             font: _titleFont,
@@ -31756,7 +31767,7 @@ Class(function StatsMeshText() {
         _captionShader.uniforms.yOffset.value = -100;
         _titleShader.tween("opacity", 1, 8000, "easeOutCubic", 5000);
         _captionShader.tween("opacity", 1, 8000, "easeOutCubic", 4700);
-        _this.delayedCall(_this.animateOut, 10000);
+        _this.delayedCall(_this.animateOut, 7000);
         TweenManager.tween(_rotation, {
             strength: 0.1
         }, 6000, "easeOutCubic", 4000, null, updateRotation)
@@ -31765,8 +31776,13 @@ Class(function StatsMeshText() {
     this.animateOut = function() {
         _titleShader.uniforms.yOffset.value = -20;
         _captionShader.uniforms.yOffset.value = 50;
-        _titleShader.tween("opacity", 0, 5000, "easeInCubic");
-        _captionShader.tween("opacity", 0, 5000, "easeInCubic");
+        _titleShader.tween("opacity", 0, 1400, "easeInCubic");
+        _captionShader.tween("opacity", 0, 1400, "easeInCubic");
+        TweenManager.tween(_this.group.scale, {
+            x: 0.82,
+            y: 0.82,
+            z: 0.82
+        }, 1400, "easeInCubic");
         TweenManager.tween(_rotation, {
             strength: 1
         }, 6000, "easeInCubic", 1000, null, updateRotation)
