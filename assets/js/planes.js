@@ -10329,86 +10329,86 @@ Class(function Config() {
     this.THROTTLE_SECOND = 5;
     this.THROTTLE_SECOND_IO = 10;
     this.LOCATIONS = [{
-        location: "Mountain View, USA",
+        location: "Antigonish, Canada",
         coords: {
-            lat: 36.86,
-            lng: -121.33
+            lat: 45.62,
+            lng: -61.99
         },
         priority: 6,
         realtime: true,
-        country: "US"
+        country: "CA"
     }, {
-        location: "Los Angeles, USA",
+        location: "Halifax, Canada",
         coords: {
-            lat: 34.0522,
-            lng: -118.2436
+            lat: 44.65,
+            lng: -63.59
         },
         priority: 4,
         realtime: true,
-        country: "US"
+        country: "CA"
     }, {
-        location: "New York, USA",
+        location: "Truro, Canada",
         coords: {
-            lat: 40.712,
-            lng: -74.005
+            lat: 45.36,
+            lng: -63.27
         },
         priority: 4,
         realtime: true,
-        country: "US"
+        country: "CA"
     }, {
-        location: "Brussels, Belgium",
+        location: "Wolfville, Canada",
         coords: {
-            lat: 50.55,
-            lng: 4.351
+            lat: 45.09,
+            lng: -64.36
         },
         priority: 4,
         realtime: true,
-        country: "BE"
+        country: "CA"
     }, {
-        location: "Paris, France",
+        location: "Ottawa, Canada",
         coords: {
-            lat: 48.856,
-            lng: 2.352
+            lat: 45.42,
+            lng: -75.70
         },
         priority: 4,
         realtime: false,
-        country: "FR"
+        country: "CA"
     }, {
-        location: "London, England",
+        location: "St. John's, Canada",
         coords: {
-            lat: 51.507,
-            lng: -0.127
+            lat: 47.56,
+            lng: -52.73
         },
         priority: 4,
         realtime: true,
-        country: "GB"
+        country: "CA"
     }, {
-        location: "Belo Horizonte, Brazil",
+        location: "Surrey, Canada",
         coords: {
-            lat: -19.916681,
-            lng: -43.9344
+            lat: 49.19,
+            lng: -122.85
         },
         priority: 4,
         realtime: true,
-        country: "BR"
+        country: "CA"
     }, {
-        location: "Dubai, UAE",
+        location: "Cedar Rapids, USA",
         coords: {
-            lat: 25.204,
-            lng: 55.27
+            lat: 41.97,
+            lng: -91.66
         },
         priority: 4,
         realtime: true,
-        country: "AE"
+        country: "US"
     }, {
-        location: "Sydney, Australia",
+        location: "Denver, USA",
         coords: {
-            lat: -33.867487,
-            lng: 151.20699
+            lat: 39.73,
+            lng: -104.98
         },
         priority: 4,
         realtime: true,
-        country: "AU"
+        country: "US"
     }, {
         location: "Montreal, Canada",
         coords: {
@@ -10419,23 +10419,23 @@ Class(function Config() {
         realtime: true,
         country: "CA"
     }, {
-        location: "Bangalore, India",
+        location: "Seattle, USA",
         coords: {
-            lat: 12.9715,
-            lng: 77.5945
+            lat: 47.60,
+            lng: -122.32
         },
         priority: 4,
         realtime: true,
-        country: "IN"
+        country: "US"
     }, {
-        location: "Tokyo, Japan",
+        location: "Sheffield, UK",
         coords: {
-            lat: 35.689,
-            lng: 139.691
+            lat: 53.38,
+            lng: -1.47
         },
         priority: 4,
         realtime: false,
-        country: "JP"
+        country: "GB"
     }, {
         location: "Austin, USA",
         coords: {
@@ -10446,826 +10446,41 @@ Class(function Config() {
         realtime: true,
         country: "US"
     }, {
-        location: "Seattle, USA",
+        location: "Glasgow, UK",
         coords: {
-            lat: 47.606209,
-            lng: -122.332071
+            lat: 55.86,
+            lng: -4.25
         },
         priority: 4,
         realtime: true,
-        country: "US"
+        country: "GB"
     }, {
-        location: "Hamburg, Germany",
+        location: "Florence, Italy",
         coords: {
-            lat: 53.551085,
-            lng: 9.993682
+            lat: 43.77,
+            lng: 11.25
         },
         priority: 4,
         realtime: true,
-        country: "DE"
-    }, {
-        location: "Munich, Germany",
-        coords: {
-            lat: 48.135125,
-            lng: 11.581981
-        },
-        priority: 4,
-        realtime: true,
-        country: "DE"
-    }, {
-        location: "Dublin, Ireland",
-        coords: {
-            lat: 53.349805,
-            lng: -6.26031
-        },
-        priority: 4,
-        realtime: true,
-        country: "IE"
-    }, {
-        location: "Istanbul, Turkey",
-        coords: {
-            lat: 41.008238,
-            lng: 28.978359
-        },
-        priority: 4,
-        realtime: true,
-        country: "TR"
-    }, {
-        location: "Gurgaon, India",
-        coords: {
-            lat: 28.459497,
-            lng: 77.026638
-        },
-        priority: 4,
-        realtime: true,
-        country: "IN"
-    }, {
-        location: "Hyderabad, India",
-        coords: {
-            lat: 17.385044,
-            lng: 78.486671
-        },
-        priority: 4,
-        realtime: true,
-        country: "IN"
-    }, {
-        location: "Colombo, Sri Lanka",
-        coords: {
-            lat: 6.927079,
-            lng: 79.861243
-        },
-        priority: 4,
-        realtime: true,
-        country: "LK"
-    }, {
-        location: "Bangkok, Thailand",
-        coords: {
-            lat: 13.756331,
-            lng: 100.501765
-        },
-        priority: 4,
-        realtime: true,
-        country: "TH"
-    }, {
-        location: "Johannesburg, SA",
-        coords: {
-            lat: -26.204103,
-            lng: 28.047305
-        },
-        priority: 4,
-        realtime: false,
-        country: "ZA"
-    }, {
-        location: "Atlanta, USA",
-        coords: {
-            lat: 33.748995,
-            lng: -84.387982
-        },
-        priority: 2,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Boulder, USA",
-        coords: {
-            lat: 40.014986,
-            lng: -105.270546
-        },
-        priority: 2,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Chicago, USA",
-        coords: {
-            lat: 41.878114,
-            lng: -87.629798
-        },
-        priority: 2,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "San Francisco, USA",
-        coords: {
-            lat: 37.774929,
-            lng: -122.419416
-        },
-        priority: 2,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Prague, Czech Republic",
-        coords: {
-            lat: 50.075538,
-            lng: 14.4378
-        },
-        priority: 2,
-        realtime: false,
-        country: "CZ"
-    }, {
-        location: "Copenhagen, Denmark",
-        coords: {
-            lat: 55.676097,
-            lng: 12.568337
-        },
-        priority: 2,
-        realtime: false,
-        country: "DK"
-    }, {
-        location: "Helsinki, Finland",
-        coords: {
-            lat: 60.169856,
-            lng: 24.938379
-        },
-        priority: 2,
-        realtime: false,
-        country: "FI"
-    }, {
-        location: "Athens, Greece",
-        coords: {
-            lat: 33.951935,
-            lng: -83.357567
-        },
-        priority: 2,
-        realtime: false,
-        country: "GR"
-    }, {
-        location: "Budapest, Hungary",
-        coords: {
-            lat: 47.497912,
-            lng: 19.040235
-        },
-        priority: 2,
-        realtime: false,
-        country: "HU"
-    }, {
-        location: "Milan, Italy",
-        coords: {
-            lat: 45.465422,
-            lng: 9.185924
-        },
-        priority: 2,
-        realtime: false,
         country: "IT"
     }, {
-        location: "Amsterdam, Netherlands",
+        location: "Lunenburg, Canada",
         coords: {
-            lat: 52.370216,
-            lng: 4.895168
-        },
-        priority: 2,
-        realtime: false,
-        country: "NL"
-    }, {
-        location: "Oslo, Norway",
-        coords: {
-            lat: 59.913869,
-            lng: 10.752245
-        },
-        priority: 2,
-        realtime: false,
-        country: "NO"
-    }, {
-        location: "Warsaw, Poland",
-        coords: {
-            lat: 52.229676,
-            lng: 21.012229
-        },
-        priority: 2,
-        realtime: false,
-        country: "PL"
-    }, {
-        location: "Warsaw, Portugal",
-        coords: {
-            lat: 38.722252,
-            lng: -9.139337
-        },
-        priority: 2,
-        realtime: false,
-        country: "PT"
-    }, {
-        location: "Moscow, Russia",
-        coords: {
-            lat: 55.755826,
-            lng: 37.6173
-        },
-        priority: 2,
-        realtime: false,
-        country: "RU"
-    }, {
-        location: "Madrid, Spain",
-        coords: {
-            lat: 40.416775,
-            lng: -3.70379
-        },
-        priority: 2,
-        realtime: false,
-        country: "ES"
-    }, {
-        location: "Stockholm, Sweden",
-        coords: {
-            lat: 59.329323,
-            lng: 18.068581
-        },
-        priority: 2,
-        realtime: false,
-        country: "SE"
-    }, {
-        location: "Zürich, Switzerland",
-        coords: {
-            lat: 47.376887,
-            lng: 8.541694
-        },
-        priority: 2,
-        realtime: false,
-        country: "CH"
-    }, {
-        location: "Toronto, Canada",
-        coords: {
-            lat: 43.653226,
-            lng: -79.383184
-        },
-        priority: 2,
-        realtime: false,
-        country: "CA"
-    }, {
-        location: "Buenos Aires, Argentina",
-        coords: {
-            lat: -34.603684,
-            lng: -58.381559
-        },
-        priority: 2,
-        realtime: false,
-        country: "AR"
-    }, {
-        location: "Sao Paulo, Brazil",
-        coords: {
-            lat: -23.55052,
-            lng: -46.633309
-        },
-        priority: 2,
-        realtime: false,
-        country: "BR"
-    }, {
-        location: "Mexico City, Mexico",
-        coords: {
-            lat: 19.432608,
-            lng: -99.133208
-        },
-        priority: 2,
-        realtime: false,
-        country: "MX"
-    }, {
-        location: "Tel Aviv, Israel",
-        coords: {
-            lat: 32.0853,
-            lng: 34.781768
-        },
-        priority: 2,
-        realtime: false,
-        country: "IL"
-    }, {
-        location: "Beijing, China",
-        coords: {
-            lat: 39.904211,
-            lng: 116.407395
-        },
-        priority: 2,
-        realtime: false,
-        country: "CN"
-    }, {
-        location: "Mumbai, India",
-        coords: {
-            lat: 19.075984,
-            lng: 72.877656
-        },
-        priority: 2,
-        realtime: false,
-        country: "IN"
-    }, {
-        location: "Kuala Lumpur, Malaysia",
-        coords: {
-            lat: 3.139003,
-            lng: 101.686855
-        },
-        priority: 2,
-        realtime: false,
-        country: "MY"
-    }, {
-        location: "Taipei, Taiwan",
-        coords: {
-            lat: 25.032969,
-            lng: 121.565418
-        },
-        priority: 2,
-        realtime: false,
-        country: "TW"
-    }, {
-        location: "Nairobi, Kenya",
-        coords: {
-            lat: -1.292066,
-            lng: 36.821946
-        },
-        priority: 2,
-        realtime: false,
-        country: "KE"
-    }, {
-        location: "Ann Arbor, USA",
-        coords: {
-            lat: 42.280826,
-            lng: -83.743038
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Cambridge, USA",
-        coords: {
-            lat: 42.373616,
-            lng: -71.109734
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Detroit, USA",
-        coords: {
-            lat: 42.331427,
-            lng: -83.045754
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Orange County, USA",
-        coords: {
-            lat: 33.717471,
-            lng: -117.831143
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Kirkland, USA",
-        coords: {
-            lat: 47.681488,
-            lng: -122.208735
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Madison, USA",
-        coords: {
-            lat: 43.073052,
-            lng: -89.40123
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Pittsburgh, USA",
-        coords: {
-            lat: 40.440625,
-            lng: -79.995886
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Reston, USA",
-        coords: {
-            lat: 38.958631,
-            lng: -77.357003
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Washington DC, USA",
-        coords: {
-            lat: 38.907192,
-            lng: -77.036871
-        },
-        priority: 1,
-        realtime: false,
-        country: "US"
-    }, {
-        location: "Aarhus, Denmark",
-        coords: {
-            lat: 56.162939,
-            lng: 10.203921
-        },
-        priority: 1,
-        realtime: false,
-        country: "DK"
-    }, {
-        location: "Berlin, Germany",
-        coords: {
-            lat: 52.520007,
-            lng: 13.404954
-        },
-        priority: 1,
-        realtime: false,
-        country: "DE"
-    }, {
-        location: "Kraków, Poland",
-        coords: {
-            lat: 50.06465,
-            lng: 19.94498
-        },
-        priority: 1,
-        realtime: false,
-        country: "PL"
-    }, {
-        location: "Wroclaw, Poland",
-        coords: {
-            lat: 51.107885,
-            lng: 17.038538
-        },
-        priority: 1,
-        realtime: false,
-        country: "PL"
-    }, {
-        location: "St. Petersburg, Russia",
-        coords: {
-            lat: 59.93428,
-            lng: 30.335099
-        },
-        priority: 1,
-        realtime: false,
-        country: "RU"
-    }, {
-        location: "Bratislava, Slovakia",
-        coords: {
-            lat: 48.148596,
-            lng: 17.107748
-        },
-        priority: 1,
-        realtime: false,
-        country: "SI"
-    }, {
-        location: "Kiev, Ukraine",
-        coords: {
-            lat: 50.4501,
-            lng: 30.5234
-        },
-        priority: 1,
-        realtime: false,
-        country: "UA"
-    }, {
-        location: "Manchester, England",
-        coords: {
-            lat: 53.480759,
-            lng: -2.242631
-        },
-        priority: 1,
-        realtime: false,
-        country: "GB"
-    }, {
-        location: "Waterloo, Canada",
-        coords: {
-            lat: 43.464258,
-            lng: -80.52041
-        },
-        priority: 1,
-        realtime: false,
-        country: "CA"
-    }, {
-        location: "Santiago, Chile",
-        coords: {
-            lat: 42.878213,
-            lng: -8.544844
-        },
-        priority: 1,
-        realtime: false,
-        country: "CL"
-    }, {
-        location: "Bogota, Colombia",
-        coords: {
-            lat: 4.710989,
-            lng: -74.072092
-        },
-        priority: 1,
-        realtime: false,
-        country: "CO"
-    }, {
-        location: "New Cairo, Egypt",
-        coords: {
-            lat: 30.007413,
-            lng: 31.491318
-        },
-        priority: 1,
-        realtime: false,
-        country: "EG"
-    }, {
-        location: "Haifa, Israel",
-        coords: {
-            lat: 32.794046,
-            lng: 34.989571
-        },
-        priority: 1,
-        realtime: false,
-        country: "IL"
-    }, {
-        location: "Guangzhou, China",
-        coords: {
-            lat: 23.12911,
-            lng: 113.264385
-        },
-        priority: 1,
-        realtime: false,
-        country: "CN"
-    }, {
-        location: "Shanghai, China",
-        coords: {
-            lat: 31.230416,
-            lng: 121.473701
-        },
-        priority: 1,
-        realtime: false,
-        country: "CN"
-    }, {
-        location: "Auckland, New Zealand",
-        coords: {
-            lat: -36.84846,
-            lng: 174.763332
-        },
-        priority: 1,
-        realtime: false,
-        country: "NZ"
-    }, {
-        location: "Accra, Ghana",
-        coords: {
-            lat: 5.603717,
-            lng: -0.186964
-        },
-        priority: 1,
-        realtime: false,
-        country: "GH"
-    }, {
-        location: "Lagos, Nigeria",
-        coords: {
-            lat: 6.524379,
-            lng: 3.379206
-        },
-        priority: 1,
-        realtime: false,
-        country: "NG"
-    }, {
-        location: "Dakar, Senegal",
-        coords: {
-            lat: 14.764504,
-            lng: -17.366029
-        },
-        priority: 1,
-        realtime: false,
-        country: "SN"
-    }, {
-        location: "Kampala, Uganda",
-        coords: {
-            lat: 0.347596,
-            lng: 32.58252
-        },
-        priority: 1,
-        realtime: false,
-        country: "UG"
-    }, ];
-    this.IO_LOCATION_LIST = [{
-        location: "Mountain View, USA",
-        coords: {
-            lat: 36.86,
-            lng: -121.33
-        },
-        priority: 6,
-        realtime: true,
-        country: "US"
-    }, {
-        location: "Paris, France",
-        coords: {
-            lat: 48.856,
-            lng: 2.352
-        },
-        priority: 4,
-        realtime: false,
-        country: "FR"
-    }, {
-        location: "Los Angeles, USA",
-        coords: {
-            lat: 34.0522,
-            lng: -118.2436
-        },
-        priority: 4,
-        realtime: true,
-        country: "US"
-    }, {
-        location: "New York, USA",
-        coords: {
-            lat: 40.712,
-            lng: -74.005
-        },
-        priority: 4,
-        realtime: true,
-        country: "US"
-    }, {
-        location: "Brussels, Belgium",
-        coords: {
-            lat: 50.55,
-            lng: 4.351
-        },
-        priority: 4,
-        realtime: true,
-        country: "BE"
-    }, {
-        location: "Belo Horizonte, Brazil",
-        coords: {
-            lat: -19.916681,
-            lng: -43.9344
-        },
-        priority: 4,
-        realtime: true,
-        country: "BR"
-    }, {
-        location: "Dubai, UAE",
-        coords: {
-            lat: 25.204,
-            lng: 55.27
-        },
-        priority: 4,
-        realtime: true,
-        country: "US",
-        country: "AE"
-    }, {
-        location: "Sydney, Australia",
-        coords: {
-            lat: -33.867487,
-            lng: 151.20699
-        },
-        priority: 4,
-        realtime: true,
-        country: "AU"
-    }, {
-        location: "Gurgaon, India",
-        coords: {
-            lat: 28.459497,
-            lng: 77.026638
-        },
-        priority: 4,
-        realtime: true,
-        country: "IN"
-    }, {
-        location: "Montreal, Canada",
-        coords: {
-            lat: 45.501689,
-            lng: -73.567256
+            lat: 44.37,
+            lng: -64.30
         },
         priority: 4,
         realtime: true,
         country: "CA"
     }, {
-        location: "Mountain View, USA",
+        location: "Red Deer, Canada",
         coords: {
-            lat: 36.86,
-            lng: -121.33
-        },
-        priority: 6,
-        realtime: true,
-        country: "US"
-    }, {
-        location: "Hamburg, Germany",
-        coords: {
-            lat: 53.551085,
-            lng: 9.993682
-        },
-        priority: 4,
-        realtime: true,
-        country: "DE"
-    }, {
-        location: "Bangalore, India",
-        coords: {
-            lat: 12.9715,
-            lng: 77.5945
-        },
-        priority: 4,
-        realtime: true,
-        country: "IN"
-    }, {
-        location: "London, England",
-        coords: {
-            lat: 51.507,
-            lng: -0.127
-        },
-        priority: 4,
-        realtime: true,
-        country: "GB"
-    }, {
-        location: "Tokyo, Japan",
-        coords: {
-            lat: 35.689,
-            lng: 139.691
+            lat: -52.27,
+            lng: -113.80
         },
         priority: 4,
         realtime: false,
-        country: "JP"
-    }, {
-        location: "Austin, USA",
-        coords: {
-            lat: 30.267153,
-            lng: -97.743061
-        },
-        priority: 4,
-        realtime: true,
-        country: "US"
-    }, {
-        location: "Munich, Germany",
-        coords: {
-            lat: 48.135125,
-            lng: 11.581981
-        },
-        priority: 4,
-        realtime: true,
-        country: "DE"
-    }, {
-        location: "Dublin, Ireland",
-        coords: {
-            lat: 53.349805,
-            lng: -6.26031
-        },
-        priority: 4,
-        realtime: true,
-        country: "IE"
-    }, {
-        location: "Istanbul, Turkey",
-        coords: {
-            lat: 41.008238,
-            lng: 28.978359
-        },
-        priority: 4,
-        realtime: true,
-        country: "TR"
-    }, {
-        location: "Hyderabad, India",
-        coords: {
-            lat: 17.385044,
-            lng: 78.486671
-        },
-        priority: 4,
-        realtime: true,
-        country: "IN"
-    }, {
-        location: "Seattle, USA",
-        coords: {
-            lat: 47.606209,
-            lng: -122.332071
-        },
-        priority: 4,
-        realtime: true,
-        country: "US"
-    }, {
-        location: "Colombo, Sri Lanka",
-        coords: {
-            lat: 6.927079,
-            lng: 79.861243
-        },
-        priority: 4,
-        realtime: true,
-        country: "LK"
-    }, {
-        location: "Bangkok, Thailand",
-        coords: {
-            lat: 13.756331,
-            lng: 100.501765
-        },
-        priority: 4,
-        realtime: true,
-        country: "TH"
-    }, {
-        location: "Johannesburg, SA",
-        coords: {
-            lat: -26.204103,
-            lng: 28.047305
-        },
-        priority: 4,
-        realtime: false,
-        country: "ZA"
+        country: "CA"
     }]
 }, "static");
 Class(function Copy() {
@@ -28832,8 +28047,9 @@ Class(function ThrownPlane() {
             var liveLocation = e.location || e.address || e.city || "Planet Earth";
             _this.events.fire(PlanesEvents.ADD_REALTIME, {
                 location: liveLocation,
-                address: e.address || liveLocation,
-                city: e.city || e.address || liveLocation,
+                address: "",
+                city: e.city || e.location || e.address || liveLocation,
+                region: "",
                 country: e.country || "",
                 country_name: e.country_name || e.country || "",
                 coords: {
