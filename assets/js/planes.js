@@ -31767,7 +31767,7 @@ Class(function StatsMeshText() {
         _captionShader.uniforms.yOffset.value = -100;
         _titleShader.tween("opacity", 1, 8000, "easeOutCubic", 5000);
         _captionShader.tween("opacity", 1, 8000, "easeOutCubic", 4700);
-        _this.delayedCall(_this.animateOut, 7000);
+        _this.delayedCall(_this.animateOut, 9500);
         TweenManager.tween(_rotation, {
             strength: 0.1
         }, 6000, "easeOutCubic", 4000, null, updateRotation)
@@ -31830,7 +31830,7 @@ Class(function StatsPing() {
         _this.group.rotation.y = stat.coords.lng * Math.PI / 180 - 1.6;
         _this.group.rotation.z = stat.coords.lat * Math.PI / 180;
         _this.delayedCall(_this.animateIn, 5000);
-        _this.delayedCall(_this.animateOut, 12000)
+        _this.delayedCall(_this.animateOut, 14500)
     }
     ;
     this.animateIn = function() {
@@ -34852,6 +34852,7 @@ Class(function PlaneButterflies() {
         })
     }
     function animateInStart() {
+        if (Device.mobile) return;
         _planes.object3D.position.z = -200;
         _planes.object3D.position.y = 50;
         var delay = Tests.slowMeshUpload() ? 1000 : 0;
@@ -34865,21 +34866,25 @@ Class(function PlaneButterflies() {
         _this.events.subscribe(PlanesEvents.NEW_PLANE, hidePlanes)
     }
     function hidePlanes() {
+        if (Device.mobile) return;
         _planes.shader.uniforms.alpha.value = 0
     }
     this.init = function() {
+        if (Device.mobile) return;
         initChunks();
         addHandlers();
         animateInStart()
     }
     ;
     this.pause = function() {
+        if (Device.mobile) return;
         _planes.fadeOut(function() {
             callChunks("pause")
         })
     }
     ;
     this.resume = function() {
+        if (Device.mobile) return;
         _planes.fadeIn();
         callChunks("resume")
     }
