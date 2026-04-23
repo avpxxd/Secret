@@ -37502,7 +37502,7 @@ Class(function SpecialStamp(_s) {
         var img = new Image();
         img.crossOrigin = "anonymous";
         Global.SPECIAL_STAMP_COUNT++;
-        if (Global.SPECIAL_STAMP_COUNT > 10) {
+        if (Global.SPECIAL_STAMP_COUNT > 11) {
             Global.SPECIAL_STAMP_COUNT = 0
         }
         img.src = Images.getProxyPath("assets/images/stamps/special/" + (typeof data.image == "number" ? data.image : Global.SPECIAL_STAMP_COUNT) + ".png");
