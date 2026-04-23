@@ -28985,6 +28985,8 @@ Class(function LoaderMobile() {
     var _this = this;
     var $this;
     var _view, _loader;
+    var _completeTimeout, _geoTimeout;
+    var _didComplete = false;
     (function() {
         initHTML();
         initViews();
@@ -29008,10 +29010,18 @@ Class(function LoaderMobile() {
         AssetUtil.exclude(["stamps", "loader"]);
         var paths = AssetUtil.loadAssets(["assets"]);
         _loader = _this.initClass(AssetLoader, paths, 3);
+        _completeTimeout = _this.delayedCall(forceComplete, 20000);
         if (Mobile.isNative()) {
             if (Mobile.System.CONNECTIVITY) {
                 _loader.add(1);
+                _geoTimeout = _this.delayedCall(function() {
+                    Data.User.data(null);
+                    _loader.trigger(1)
+                }, 6000);
                 XHR.get("assets/data/_geo.json", function(e) {
+                    if (_geoTimeout) {
+                        clearTimeout(_geoTimeout)
+                    }
                     Data.User.data(e);
                     _loader.trigger(1)
                 })
@@ -29023,7 +29033,24 @@ Class(function LoaderMobile() {
     function addHandlers() {
         _loader.events.add(HydraEvents.COMPLETE, complete)
     }
+    function forceComplete() {
+        if (_didComplete) {
+            return
+        }
+        console.warn("[PaperPlanes] LoaderMobile.forceComplete fired");
+        complete()
+    }
     function complete() {
+        if (_didComplete) {
+            return
+        }
+        _didComplete = true;
+        if (_completeTimeout) {
+            clearTimeout(_completeTimeout)
+        }
+        if (_geoTimeout) {
+            clearTimeout(_geoTimeout)
+        }
         Data.Socket.connect();
         _this.events.fire(HydraEvents.COMPLETE);
         AssetUtil.clearExclude();
