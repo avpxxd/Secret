@@ -28707,6 +28707,7 @@ Class(function ThrownPlane() {
     var _debug, _planeFromIO;
     var _livePlane;
     var _isListening = false;
+    var _dummyPlaneTimer;
     this.group = new THREE.Group();
     var _colors = Config.STAMPS_COLORS;
     var _throttle = 0;
@@ -28714,6 +28715,7 @@ Class(function ThrownPlane() {
     (function() {
         initViews();
         addHandlers();
+        startDummyPlaneLoop();
         setInterval(clearThrottle, 1000)
     }
     )();
@@ -28757,6 +28759,35 @@ Class(function ThrownPlane() {
             __window.bind("keydown", _debug)
         }
     }
+    function startDummyPlaneLoop() {
+        if (Device.mobile || !Config.LOCATIONS || !Config.LOCATIONS.length) {
+            return
+        }
+        if (_dummyPlaneTimer) {
+            clearTimeout(_dummyPlaneTimer)
+        }
+        _dummyPlaneTimer = _this.delayedCall(function() {
+            createDummyPlane();
+            startDummyPlaneLoop()
+        }, 120000)
+    }
+    function createDummyPlane() {
+        var location = Config.LOCATIONS[Utils.doRandom(0, Config.LOCATIONS.length - 1)];
+        if (!location || !location.coords) {
+            return
+        }
+        newPlane({
+            coords: [location.coords.lat, location.coords.lng],
+            color: _colors[Utils.doRandom(0, _colors.length - 1)],
+            scale: {
+                x: Utils.doRandom(50, 110) * 0.01,
+                z: Utils.doRandom(50, 100) * 0.01
+            },
+            atio: true,
+            dummy: true,
+            location: location.location
+        })
+    }
     function listenToPlanes() {
         if (_isListening) {
             return
@@ -28785,9 +28816,6 @@ Class(function ThrownPlane() {
                 }
             }
         };
-        this.launchPlane = function(data) {
-            newPlane(data, true)
-        }
         if (isLive && !Tests.AT_IO()) {
             createPlane()
         } else if (needsThrottle()) {
@@ -28824,6 +28852,9 @@ Class(function ThrownPlane() {
             return
         }
         checkProximity(e)
+    }
+    this.launchPlane = function(data) {
+        newPlane(data, true)
     }
     function checkProximity(e) {
         var a = Data.User.getCoords();
