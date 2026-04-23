@@ -34824,7 +34824,7 @@ Class(function PlaneButterflies() {
     Inherit(this, Component);
     var _this = this;
     var _planes;
-    var _numParticles = Math.round(Config.BUTTERFLY_COUNT * Tests.getPlaneReduce());
+    var _numParticles = Math.round((Device.mobile ? 10 : Config.BUTTERFLY_COUNT) * Tests.getPlaneReduce());
     var _numThreads = Config.BUTTERFLY_THREAD_COUNT;
     var _chunks = [];
     (function() {
@@ -34852,7 +34852,6 @@ Class(function PlaneButterflies() {
         })
     }
     function animateInStart() {
-        if (Device.mobile) return;
         _planes.object3D.position.z = -200;
         _planes.object3D.position.y = 50;
         var delay = Tests.slowMeshUpload() ? 1000 : 0;
@@ -34866,25 +34865,21 @@ Class(function PlaneButterflies() {
         _this.events.subscribe(PlanesEvents.NEW_PLANE, hidePlanes)
     }
     function hidePlanes() {
-        if (Device.mobile) return;
         _planes.shader.uniforms.alpha.value = 0
     }
     this.init = function() {
-        if (Device.mobile) return;
         initChunks();
         addHandlers();
         animateInStart()
     }
     ;
     this.pause = function() {
-        if (Device.mobile) return;
         _planes.fadeOut(function() {
             callChunks("pause")
         })
     }
     ;
     this.resume = function() {
-        if (Device.mobile) return;
         _planes.fadeIn();
         callChunks("resume")
     }
