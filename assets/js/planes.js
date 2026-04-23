@@ -28843,7 +28843,7 @@ Class(function MyPlanes() {
         _list.animateShiftOut();
         GATracker.trackEvent("my planes", "click", "open detail", 1);
         Data.Planes.refreshPlanes(function() {
-            var plane = Data.Planes.findPlaneByData(e.data) || e.data;
+            var plane = Data.Planes.findPlaneByData(e.data.data) || e.data.data;
             _detail = _this.initClass(MyPlanesDetailView, plane);
             _this.delayedCall(_detail.animateIn, 100)
         })
